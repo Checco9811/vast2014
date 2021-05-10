@@ -4,7 +4,7 @@
       <b-row>
         <b-col>
           <b-row>
-            <!--Map here-->
+            <Map></Map>
           </b-row>
 
           <b-row>
@@ -31,10 +31,12 @@
 </template>
 
 <script>
+import Map from '@/components/Map';
 
 export default {
   name: 'App',
   components: {
+    Map
   },
   data(){
     return{
