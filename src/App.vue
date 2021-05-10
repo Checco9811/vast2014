@@ -4,7 +4,7 @@
       <b-row>
         <b-col>
           <b-row>
-            <Map :featureCollection="pointCollection"></Map>
+            <Map :trajectories="trajectories"></Map>
           </b-row>
 
           <b-row>
@@ -32,6 +32,7 @@
 
 <script>
 import Map from '@/components/Map';
+const d3 = require('d3');
 
 export default {
   name: 'App',
@@ -40,6 +41,7 @@ export default {
   },
   data(){
     return{
+      trajectories: [],
       pointCollection: {
         type: 'FeatureCollection',
         features: [
@@ -76,12 +78,22 @@ export default {
             return r;
           });
 
-          this.refreshMap(gpsRecord);
+          const trajs = d3.group(gpsRecord, d => d.id); // group by id
+          const trs = Array.from(trajs).map((d) => {
+            return {
+              id: +d[0],
+              trajs: d[1].map(p => ([ p.long, p.lat ])),
+            };
+          });
+
+          this.refreshMap(trs);
         });
   },
   methods: {
     refreshMap(cfDimension) {
-      this.pointCollection = this.getGeoJsonFromGpsRecord(cfDimension);
+      //this.pointCollection = this.getGeoJsonFromGpsRecord(cfDimension);
+      this.trajectories = cfDimension;
+      console.log(this.trajectories);
     },
     getGeoJsonFromGpsRecord(gpsRecord) {
       const fc = {

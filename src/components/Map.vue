@@ -17,6 +17,14 @@ const d3 = require('d3');
 export default {
   name: "Map",
   props: {
+    trajectories: {
+      type: Array,
+      default: () => ([{
+        id: 1,
+        trajs: [[1, 2], [2, 2]]
+      }])
+    }
+    /*
     featureCollection: {
       type: Object,
       default: () => ({
@@ -35,6 +43,8 @@ export default {
         ],
       }),
     },
+     */
+
   },
   mounted(){
     const gAbila = d3.select(this.$refs.world);
@@ -46,14 +56,36 @@ export default {
               .call(map);
         });
 
-    gFeatures.datum(this.featureCollection)
+    gFeatures.datum(this.getGeoJsonLineString(this.trajectories))
         .call(map);
   },
+  methods:{
+    getGeoJsonLineString(trajs) {
+      const fc = {
+        type: 'FeatureCollection',
+        features: trajs
+            .map(d => ({ // for each entry
+                  type: 'Feature',
+                  properties: {
+                    Timestamp: d.Timestamp,
+                    id: d.id
+                  },
+                  geometry: {
+                    type: 'LineString',
+                    coordinates: d.trajs,
+                  }
+                })
+            )
+      };
+
+      return fc;
+    },
+  },
   watch: {
-    featureCollection(newFc) {
+    trajectories(newFc) {
       const gFeature = d3.select(this.$refs.features);
 
-      gFeature.datum(newFc).call(map);
+      gFeature.datum(this.getGeoJsonLineString(newFc)).call(map);
 
       const gWorld = d3.select(this.$refs.world);
       gWorld.call(map);
@@ -78,7 +110,8 @@ g.world path{
 
 g.features path{
   stroke: red;
-  stroke-width: 0.5;
+  fill: transparent;
+  stroke-width: 2;
 }
 
 </style>
