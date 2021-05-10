@@ -40,6 +40,21 @@ export default {
   },
   data(){
     return{
+      pointCollection: {
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            properties: {
+              name: 'Default point',
+            },
+            geometry: {
+              type: 'LineString',
+              coordinates: [[1, 1], [1, 2]]
+            },
+          },
+        ],
+      },
       CarID: {
         value: [1,2],
         options: [1,2,3],
@@ -51,7 +66,7 @@ export default {
     fetch('gpsSmall.json')
         .then(data => data.json())
         .then((data) => {
-          const gps = data.map((d) => {
+          const gpsRecord = data.map((d) => {
             const r = {
               Timestamp: d.Timestamp,
               id: +d.id,
@@ -61,8 +76,31 @@ export default {
             return r;
           });
 
-          console.log(gps);
+          this.pointCollection = this.getGeoJsonFromGpsRecord(gpsRecord);
         });
+  },
+  methods: {
+    getGeoJsonFromGpsRecord(gpsRecord) {
+      const fc = {
+        type: 'FeatureCollection',
+        features:
+            gpsRecord
+                .map(d => ({ // for each entry
+                      type: 'Feature',
+                      properties: {
+                        Timestamp: d.Timestamp,
+                        id: d.id
+                      },
+                      geometry: {
+                        type: 'Point',
+                        coordinates: [d.long, d.lat],
+                      },
+                    }),
+                )
+      };
+
+      return fc;
+    },
   }
 }
 </script>
