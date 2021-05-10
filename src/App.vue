@@ -46,6 +46,23 @@ export default {
       }
     }
 
+  },
+  mounted(){
+    fetch('gpsSmall.json')
+        .then(data => data.json())
+        .then((data) => {
+          const gps = data.map((d) => {
+            const r = {
+              Timestamp: d.Timestamp,
+              id: +d.id,
+              lat: +d.lat,
+              long: +d.long
+            };
+            return r;
+          });
+
+          console.log(gps);
+        });
   }
 }
 </script>
