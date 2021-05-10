@@ -4,7 +4,7 @@
       <b-row>
         <b-col>
           <b-row>
-            <Map></Map>
+            <Map :featureCollection="pointCollection"></Map>
           </b-row>
 
           <b-row>
@@ -76,10 +76,13 @@ export default {
             return r;
           });
 
-          this.pointCollection = this.getGeoJsonFromGpsRecord(gpsRecord);
+          this.refreshMap(gpsRecord);
         });
   },
   methods: {
+    refreshMap(cfDimension) {
+      this.pointCollection = this.getGeoJsonFromGpsRecord(cfDimension);
+    },
     getGeoJsonFromGpsRecord(gpsRecord) {
       const fc = {
         type: 'FeatureCollection',
