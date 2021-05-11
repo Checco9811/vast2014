@@ -51,6 +51,7 @@ export default {
     }
   },
   mounted(){
+    //Loading map
     d3.json('Abila.geojson')
         .then((data) => {
           this.geoJson = data;
@@ -58,13 +59,22 @@ export default {
 
     var map = this.$refs.map.mapObject;
 
-    L.polyline([],
-        {
-          color: 'green',
-          weight: 5,
-          opacity: .7,
-          lineJoin: 'roud',
-        }).addTo(map);
+    //Loading locations
+    d3.json('location.geojson')
+        .then((data) => {
+          L.geoJSON(data, {
+            function(geoJsonPoint, latlng) {
+              return L.marker(latlng, {icon: L.icon({
+                                                iconSize: [1, 1], // size of the icon
+                                                })});
+            },
+            onEachFeature: function onEachFeature(feature, layer) {
+            layer.bindPopup(feature.properties.name);
+          }
+          }).addTo(map);
+        });
+
+
   },
   watch:{
     coordinates: {
@@ -119,6 +129,7 @@ export default {
 
     }
   }
+
 }
 </script>
 
