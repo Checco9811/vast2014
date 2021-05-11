@@ -1,12 +1,36 @@
 
 
 <template>
-  <l-map ref="map" style="height: 500px; weight: 100%;" :zoom="zoom" :center="center" :maxBounds="maxBounds">
-    <l-tile-layer :url="url"></l-tile-layer>
-    <l-geo-json :geojson="geoJson"></l-geo-json>
-    <l-feature-group ref="features">
-    </l-feature-group>
-  </l-map>
+  <b-component>
+    <b-row>
+      <b-col cols="3">
+
+      </b-col>
+      <b-col>
+        <l-map ref="map" style="height: 500px; weight: 100%;" :zoom="zoom" :center="center" :maxBounds="maxBounds">
+          <l-tile-layer :url="url"></l-tile-layer>
+          <l-geo-json :geojson="geoJson"></l-geo-json>
+          <l-layer-group ref="features">
+          </l-layer-group>
+        </l-map>
+      </b-col>
+      <b-col cols="3">
+        <b-form-group label="Select a CarId" id="carList">
+          <b-form-checkbox-group
+              size="lg"
+              v-model="CarID.value"
+              :options="CarID.options"
+              name="buttonsCarId"
+              buttons
+              stacked
+              style="width: 100%"
+          ></b-form-checkbox-group>
+        </b-form-group>
+      </b-col>
+    </b-row>
+
+  </b-component>
+
 </template>
 
 <script>
@@ -17,7 +41,7 @@
 import L from 'leaflet';
 import { latLngBounds } from "leaflet";
 // eslint-disable-next-line no-unused-vars
-import { LMap, LTileLayer, LMarker, LGeoJson, LFeatureGroup, LPolyline} from 'vue2-leaflet';
+import { LMap, LTileLayer, LMarker, LGeoJson, LFeatureGroup, LPolyline, LLayerGroup} from 'vue2-leaflet';
 
 const d3 = require('d3');
 
@@ -29,6 +53,8 @@ export default {
     // eslint-disable-next-line vue/no-unused-components
     LMarker,
     LGeoJson,
+    LLayerGroup,
+    // eslint-disable-next-line vue/no-unused-components
     LFeatureGroup,
     // eslint-disable-next-line vue/no-unused-components
     LPolyline
@@ -47,22 +73,11 @@ export default {
               [36.09904766316007, 24.91905212402343]]
       ),
       geoJson: null,
-      pointCollection: {
-        type: 'FeatureCollection',
-        features: [
-          {
-            type: 'Feature',
-            properties: {
-              name: 'Default point',
-            },
-            geometry: {
-              type: 'LineString',
-              coordinates: [[1, 1], [1, 2]]
-            },
-          },
-        ],
-      },
-      lines: []
+      lines: [],
+      CarID: {
+        value: [1, 2],
+        options: [1, 2, 3]
+      }
     };
   },
   mounted(){
@@ -93,7 +108,7 @@ export default {
 
           console.log(trs);
 
-          var map = this.$refs.map.mapObject;
+          var map = this.$refs.features.mapObject;
 
           trs.forEach(d => {
             L.polyline(d.trajs,
@@ -101,8 +116,17 @@ export default {
                   color: 'green',
                   weight: 5,
                   opacity: .7,
-                  lineJoin: 'roud'
+                  lineJoin: 'roud',
+                  id: d.id
                 }).addTo(map);
+          });
+
+          //map.clearLayers();
+
+          map.eachLayer(function (layer) {
+            if(layer.options.id===3)
+              map.clearLayers();
+              //map.removeLayer();
           });
 
           this.refreshMap(gps);
@@ -134,6 +158,13 @@ export default {
 
       return fc;
     }
+  },
+  watch: {
+    CarID: {
+      handler(newVal) {
+        console.log(newVal);
+      },
+    },
   }
 }
 </script>
