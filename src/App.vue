@@ -7,12 +7,7 @@
 
       </b-col>
       <b-col>
-        <l-map ref="map" style="height: 500px; weight: 100%;" :zoom="zoom" :center="center" :maxBounds="maxBounds">
-          <l-tile-layer :url="url"></l-tile-layer>
-          <l-geo-json :geojson="geoJson"></l-geo-json>
-          <l-layer-group ref="features">
-          </l-layer-group>
-        </l-map>
+        <Map :coordinates="coordinates"></Map>
       </b-col>
       <b-col cols="3">
         <b-form-group label="Select a CarId" id="carList">
@@ -34,12 +29,9 @@
 </template>
 
 <script>
+import Map from '@/components/Map';
 
 import crossfilter from 'crossfilter';
-import L from 'leaflet';
-import { latLngBounds } from "leaflet";
-// eslint-disable-next-line no-unused-vars
-import { LMap, LTileLayer, LMarker, LGeoJson, LFeatureGroup, LPolyline, LLayerGroup} from 'vue2-leaflet';
 
 const d3 = require('d3');
 
@@ -50,31 +42,10 @@ let dID; // dimension for Id
 export default {
   name: 'App',
   components: {
-    LMap,
-    LTileLayer,
-    // eslint-disable-next-line vue/no-unused-components
-    LMarker,
-    LGeoJson,
-    LLayerGroup,
-    // eslint-disable-next-line vue/no-unused-components
-    LFeatureGroup,
-    // eslint-disable-next-line vue/no-unused-components
-    LPolyline
+    Map
   },
   data () {
     return {
-      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      zoom: 13,
-      center: [36.070512, 24.864487],
-      bounds: latLngBounds(
-          [[36.03771731908686, 24.793739318847656],
-              [36.09904766316007, 24.91905212402343]]
-      ),
-      maxBounds: latLngBounds(
-          [[36.03771731908686, 24.793739318847656],
-              [36.09904766316007, 24.91905212402343]]
-      ),
-      geoJson: null,
       coordinates: [],
       CarID: {
         value: [1, 2],
@@ -83,10 +54,6 @@ export default {
     };
   },
   mounted(){
-    d3.json('Abila.geojson')
-        .then((data) => {
-          this.geoJson = data;
-        });
 
     d3.csv('gps.csv')
         .then((data) => {
@@ -113,38 +80,7 @@ export default {
   },
   methods: {
     refreshMap(cfDimension) {
-      var map = this.$refs.features.mapObject;
-
-      console.log(cfDimension.top(Infinity));
-      const trajs = d3.group(cfDimension.top(Infinity), d => d.id); // group by id
-      const trs = Array.from(trajs).map((d) => {
-        return {
-          id: +d[0],
-          trajs: d[1].sort((a, b) => a.Timestamp - b.Timestamp).map(p => ([ p.long, p.lat ])),
-        };
-      });
-
-      console.log(trs);
-
-      trs.forEach(d => {
-        L.polyline(d.trajs,
-            {
-              color: 'green',
-              weight: 5,
-              opacity: .7,
-              lineJoin: 'roud',
-              id: d.id
-            }).addTo(map);
-      });
-
-      /*
-      map.eachLayer(function (layer) {
-        if(layer.options.id)
-          console.log("aa");
-          //map.removeLayer(layer);
-      });
-
-       */
+      this.coordinates = cfDimension.top(Infinity);
     },
   },
   watch: {
