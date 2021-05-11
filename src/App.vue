@@ -1,7 +1,7 @@
 
 
 <template>
-  <b-component>
+  <b-container>
     <b-row>
       <b-col cols="3">
 
@@ -29,21 +29,23 @@
       </b-col>
     </b-row>
 
-  </b-component>
+  </b-container>
 
 </template>
 
 <script>
 
-
-
-// eslint-disable-next-line no-unused-vars
+import crossfilter from 'crossfilter';
 import L from 'leaflet';
 import { latLngBounds } from "leaflet";
 // eslint-disable-next-line no-unused-vars
 import { LMap, LTileLayer, LMarker, LGeoJson, LFeatureGroup, LPolyline, LLayerGroup} from 'vue2-leaflet';
 
 const d3 = require('d3');
+
+// crossfilter data management
+let cf; // crossfilter instance
+let dID; // dimension for Id
 
 export default {
   name: 'App',
@@ -73,7 +75,7 @@ export default {
               [36.09904766316007, 24.91905212402343]]
       ),
       geoJson: null,
-      lines: [],
+      coordinates: [],
       CarID: {
         value: [1, 2],
         options: [1, 2, 3]
@@ -88,7 +90,7 @@ export default {
 
     d3.csv('gps.csv')
         .then((data) => {
-          const gps = data.map((d) => {
+          const gpsRecord = data.map((d) => {
             const r = {
               Timestamp: +new Date(d.Timestamp).getTime(),
               id: +d.id,
@@ -98,72 +100,61 @@ export default {
             return r;
           });
 
-          const trajs = d3.group(gps, d => d.id); // group by id
-          const trs = Array.from(trajs).map((d) => {
-            return {
-              id: +d[0],
-              trajs: d[1].map(p => ([ p.lat, p.long ])),
-            };
-          });
+          cf = crossfilter(gpsRecord);
+          dID = cf.dimension(d => d.id);
 
-          console.log(trs);
+          this.CarID.options = dID.group().reduceCount().all().map(v => v.key);
+          //this.CarID.value = this.CarID.options;
+          this.CarID.value = [this.CarID.options[0]];
 
-          var map = this.$refs.features.mapObject;
-
-          trs.forEach(d => {
-            L.polyline(d.trajs,
-                {
-                  color: 'green',
-                  weight: 5,
-                  opacity: .7,
-                  lineJoin: 'roud',
-                  id: d.id
-                }).addTo(map);
-          });
-
-          //map.clearLayers();
-
-          map.eachLayer(function (layer) {
-            if(layer.options.id===3)
-              map.clearLayers();
-              //map.removeLayer();
-          });
-
-          this.refreshMap(gps);
+          this.refreshMap(dID);
         });
 
   },
   methods: {
     refreshMap(cfDimension) {
-      this.pointCollection = this.getGeoJsonFromReportsPoint(cfDimension);
-    },
-    getGeoJsonFromReportsPoint(coordinates) {
-      const fc = {
-        type: 'FeatureCollection',
-        features:
-            coordinates
-                .map(d => ({ // for each entry
-                      type: 'Feature',
-                      properties: {
-                        Timestamp: d.Timestamp,
-                        id: d.id
-                      },
-                      geometry: {
-                        type: 'Point',
-                        coordinates: [d.long, d.lat],
-                      },
-                    }),
-                )
-      };
+      var map = this.$refs.features.mapObject;
 
-      return fc;
-    }
+      console.log(cfDimension.top(Infinity));
+      const trajs = d3.group(cfDimension.top(Infinity), d => d.id); // group by id
+      const trs = Array.from(trajs).map((d) => {
+        return {
+          id: +d[0],
+          trajs: d[1].sort((a, b) => a.Timestamp - b.Timestamp).map(p => ([ p.long, p.lat ])),
+        };
+      });
+
+      console.log(trs);
+
+      trs.forEach(d => {
+        L.polyline(d.trajs,
+            {
+              color: 'green',
+              weight: 5,
+              opacity: .7,
+              lineJoin: 'roud',
+              id: d.id
+            }).addTo(map);
+      });
+
+      /*
+      map.eachLayer(function (layer) {
+        if(layer.options.id)
+          console.log("aa");
+          //map.removeLayer(layer);
+      });
+
+       */
+    },
   },
   watch: {
     CarID: {
       handler(newVal) {
-        console.log(newVal);
+        //dID.filter(newVal.value);
+        dID.filter(d => newVal.value.indexOf(d) > -1);
+        this.refreshMap(dID);
       },
+      deep: true,
     },
   }
 }
