@@ -82,7 +82,15 @@ export default {
             return r;
           });
 
-          cf = crossfilter(gpsRecord);
+          const trajs = d3.group(gpsRecord, d => d.id); // group by id
+          const trs = Array.from(trajs).map((d) => {
+            return {
+              id: +d[0],
+              trajs: d[1].map(p => ([p.long, p.lat])),
+            };
+          });
+
+          cf = crossfilter(trs);
           dID = cf.dimension(d => d.id);
 
           this.CarID.options = dID.group().reduceCount().all().map(v => v.key);
@@ -94,17 +102,7 @@ export default {
   },
   methods: {
     refreshMap(cfDimension) {
-      const trajs = d3.group(cfDimension.top(Infinity), d => d.id); // group by id
-      const trs = Array.from(trajs).map((d) => {
-        return {
-          id: +d[0],
-          trajs: d[1].map(p => ([p.long, p.lat])),
-        };
-      });
-
-      console.log(trs);
-
-      this.featureCollection = this.getGeoJsonLineString(trs);
+      this.featureCollection = this.getGeoJsonLineString(cfDimension.top(Infinity));
     },
     getGeoJsonFromGpsRecord(gpsRecord) {
       const fc = {
