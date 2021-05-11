@@ -69,8 +69,7 @@ export default {
 
   },
   mounted() {
-    fetch('gpsSmall.json')
-        .then(data => data.json())
+    d3.csv('gps.csv')
         .then((data) => {
           const gpsRecord = data.map((d) => {
             const r = {
