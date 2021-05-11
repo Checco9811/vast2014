@@ -13,8 +13,7 @@ export default function BuildMap() {
     let featureClass = "id";
 
     function me(selection) {
-
-        console.log('Map', selection.datum());
+        //console.log('Map', selection.datum());
 
         const boundaries = selection.node().parentNode.getBoundingClientRect();
         //console.log('dimensions', boundaries);

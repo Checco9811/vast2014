@@ -4,7 +4,7 @@
       <b-row>
         <b-col>
           <b-row>
-            <Map :trajectories="trajectories"></Map>
+            <Map :featureCollection="featureCollection"></Map>
           </b-row>
 
           <b-row>
@@ -31,18 +31,22 @@
 </template>
 
 <script>
+import crossfilter from 'crossfilter';
 import Map from '@/components/Map';
 const d3 = require('d3');
+
+// crossfilter data management
+let cf; // crossfilter instance
+let dID; // dimension for Id
 
 export default {
   name: 'App',
   components: {
     Map
   },
-  data(){
-    return{
-      trajectories: [],
-      pointCollection: {
+  data() {
+    return {
+      featureCollection: {
         type: 'FeatureCollection',
         features: [
           {
@@ -58,13 +62,13 @@ export default {
         ],
       },
       CarID: {
-        value: [1,2],
-        options: [1,2,3],
+        value: [1, 2],
+        options: [1, 2, 3],
       }
     }
 
   },
-  mounted(){
+  mounted() {
     fetch('gpsSmall.json')
         .then(data => data.json())
         .then((data) => {
@@ -78,22 +82,29 @@ export default {
             return r;
           });
 
-          const trajs = d3.group(gpsRecord, d => d.id); // group by id
-          const trs = Array.from(trajs).map((d) => {
-            return {
-              id: +d[0],
-              trajs: d[1].map(p => ([ p.long, p.lat ])),
-            };
-          });
+          cf = crossfilter(gpsRecord);
+          dID = cf.dimension(d => d.id);
 
-          this.refreshMap(trs);
+          this.CarID.options = dID.group().reduceCount().all().map(v => v.key);
+          //this.CarID.value = this.CarID.options;
+          this.CarID.value = [this.CarID.options[0]];
+
+          this.refreshMap(dID);
         });
   },
   methods: {
     refreshMap(cfDimension) {
-      //this.pointCollection = this.getGeoJsonFromGpsRecord(cfDimension);
-      this.trajectories = cfDimension;
-      console.log(this.trajectories);
+      const trajs = d3.group(cfDimension.top(Infinity), d => d.id); // group by id
+      const trs = Array.from(trajs).map((d) => {
+        return {
+          id: +d[0],
+          trajs: d[1].map(p => ([p.long, p.lat])),
+        };
+      });
+
+      console.log(trs);
+
+      this.featureCollection = this.getGeoJsonLineString(trs);
     },
     getGeoJsonFromGpsRecord(gpsRecord) {
       const fc = {
@@ -116,6 +127,36 @@ export default {
 
       return fc;
     },
+    getGeoJsonLineString(trajs) {
+      const fc = {
+        type: 'FeatureCollection',
+        features: trajs
+            .map(d => ({ // for each entry
+                  type: 'Feature',
+                  properties: {
+                    Timestamp: d.Timestamp,
+                    id: d.id
+                  },
+                  geometry: {
+                    type: 'LineString',
+                    coordinates: d.trajs,
+                  }
+                })
+            )
+      };
+
+      return fc;
+    },
+  },
+  watch: {
+    CarID: {
+      handler(newVal) {
+        //dID.filter(newVal.value);
+        dID.filter(d => newVal.value.indexOf(d) > -1);
+        this.refreshMap(dID);
+      },
+      deep: true, // force watching within properties
+    },
   }
 }
 </script>
@@ -128,5 +169,10 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+}
+
+#carList{
+  height: 500px;
+  overflow-y: auto;
 }
 </style>
