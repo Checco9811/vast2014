@@ -10,7 +10,7 @@
         <Map :coordinates="coordinates"></Map>
       </b-col>
       <b-col cols="3">
-        <b-form-group label="Select a CarId" id="carList">
+        <b-form-group label="Select CarIDs" id="CarIDs">
           <b-form-checkbox-group
               size="lg"
               v-model="CarID.value"
@@ -106,8 +106,9 @@ export default {
   margin-top: 60px;
 }
 
-#map{
- height: 180px;
+#CarIDs{
+  height: 500px;
+  overflow-y: auto;
 }
 
 </style>
