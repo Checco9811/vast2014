@@ -75,7 +75,8 @@ export default {
   },
   methods:{
     refreshMap(coordinates) {
-      var map = this.$refs.features.mapObject;
+      var map = this.$refs.map.mapObject;
+      var features = this.$refs.features.mapObject;
       var idList = [];
 
       console.log(coordinates);
@@ -90,22 +91,30 @@ export default {
       });
 
       //remove from map non selected CarIDs
-      map.eachLayer(function (layer) {
+      features.eachLayer(function (layer) {
         if(!idList.includes(layer.options.id)){
-          map.removeLayer(layer);
+          features.removeLayer(layer);
         }
       });
 
       //add to map the new CarIDs
       trs.forEach(d => {
-        L.polyline(d.trajs,
+        var polyline = L.polyline(d.trajs,
             {
               color: 'green',
               weight: 5,
               opacity: .7,
               lineJoin: 'roud',
               id: d.id
-            }).addTo(map);
+            });
+        polyline.on('mouseover', function(e) {
+          L.popup()
+            .setLatLng(e.latlng)
+            .setContent('CarID: '+d.id)
+            .openOn(map);
+        });
+        //polyline.bindTooltip(d.id+"");
+        polyline.addTo(features);
       });
 
     }

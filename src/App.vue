@@ -74,7 +74,8 @@ export default {
           //this.CarID.value = this.CarID.options;
           this.CarID.value = [this.CarID.options[0]];
 
-          this.refreshMap(dID);
+          //this.refreshMap(dID);
+          this.coordinates = dID.top(Infinity);
         });
 
   },
