@@ -1,9 +1,9 @@
 
 
 <template>
-  <l-map ref="map" style="height: 500px; weight: 100%;" :zoom="zoom" :center="center">
+  <l-map ref="map" style="height: 500px; weight: 100%;" :zoom="zoom" :center="center" :maxBounds="maxBounds">
     <l-tile-layer :url="url"></l-tile-layer>
-    <l-geo-json :geojson="geojson"></l-geo-json>
+    <l-geo-json :geojson="geoJson"></l-geo-json>
     <l-feature-group ref="features">
     </l-feature-group>
   </l-map>
@@ -15,6 +15,7 @@
 
 // eslint-disable-next-line no-unused-vars
 import L from 'leaflet';
+import { latLngBounds } from "leaflet";
 // eslint-disable-next-line no-unused-vars
 import { LMap, LTileLayer, LMarker, LGeoJson, LFeatureGroup, LPolyline} from 'vue2-leaflet';
 
@@ -37,8 +38,15 @@ export default {
       url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       zoom: 13,
       center: [36.070512, 24.864487],
-      bounds: null,
-      geojson: null,
+      bounds: latLngBounds(
+          [[36.03771731908686, 24.793739318847656],
+              [36.09904766316007, 24.91905212402343]]
+      ),
+      maxBounds: latLngBounds(
+          [[36.03771731908686, 24.793739318847656],
+              [36.09904766316007, 24.91905212402343]]
+      ),
+      geoJson: null,
       pointCollection: {
         type: 'FeatureCollection',
         features: [
@@ -60,11 +68,10 @@ export default {
   mounted(){
     d3.json('Abila.geojson')
         .then((data) => {
-          this.geojson = data;
+          this.geoJson = data;
         });
 
-    fetch('./gpsSmall.json')
-        .then(data => data.json())
+    d3.csv('gps.csv')
         .then((data) => {
           const gps = data.map((d) => {
             const r = {
