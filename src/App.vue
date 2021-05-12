@@ -1,16 +1,29 @@
 <template>
-  <b-container>
+  <b-container fluid>
     <b-row>
-      <b-col cols="5">
-        <b-table id="CarIDs"
-            :items="items"
-            :fields="fields"
-            :select-mode="selectMode"
-            responsive="sm"
-            ref="selectableTable"
-            selectable sticky-header="500px"
-            @row-selected="onRowSelected">
-        </b-table>
+      <b-col cols="4">
+        <b-row>
+          <b-table id="CarIDs"
+              :items="items"
+              :fields="fields"
+              :select-mode="selectMode"
+              responsive="sm"
+              ref="selectableTable"
+              selectable sticky-header="300px"
+              @row-selected="onRowSelected">
+          </b-table>
+        </b-row>
+        <b-row>
+          <b-col>
+            <label>Choose a Date</label>
+            <b-form-datepicker id="example-datepicker"
+                               v-model="selectedDate"
+                               min="2014-01-06"
+                               max="2014-01-19"
+                               locale="en"
+                               class="mb-2"></b-form-datepicker>
+          </b-col>
+        </b-row>
       </b-col>
       <b-col>
         <Map :coordinates="coordinates"></Map>
@@ -42,6 +55,7 @@ export default {
       coordinates: [],
       items: [],
       selected: [],
+      selectedDate: '',
       fields: [
         {key:'CarID', sortable: true},
         {key:'FirstName', sortable: true},
