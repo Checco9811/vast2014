@@ -1,10 +1,16 @@
-
-
 <template>
   <b-container>
     <b-row>
       <b-col cols="5">
-        <Table :items="items" :selected="selected" id="CarIDs"></Table>
+        <b-table id="CarIDs" refs="CarIDs"
+            :items="items"
+            :fields="fields"
+            :select-mode="selectMode"
+            responsive="sm"
+            ref="selectableTable"
+            selectable
+            @row-selected="onRowSelected">
+        </b-table>
       </b-col>
       <b-col>
         <Map :coordinates="coordinates"></Map>
@@ -17,7 +23,6 @@
 
 <script>
 import Map from '@/components/Map';
-import Table from "@/components/Table";
 
 import crossfilter from 'crossfilter';
 
@@ -30,18 +35,15 @@ let dID; // dimension for Id
 export default {
   name: 'App',
   components: {
-    Table,
     Map
   },
   data () {
     return {
       coordinates: [],
       items: [],
-      selected: null,
-      CarID: {
-        value: [1, 2],
-        options: [1, 2, 3]
-      }
+      selected: [],
+      fields: ['CarID'],
+      selectMode: 'multi'
     };
   },
   mounted(){
@@ -62,11 +64,9 @@ export default {
           dID = cf.dimension(d => d.id);
 
           this.items = dID.group().reduceCount().all().map(v => {return {CarID: v.key}});
-          console.log(this.items);
+          this.selected = [];
 
-          //this.CarID.options = dID.group().reduceCount().all().map(v => v.key);
-          //this.CarID.value = this.CarID.options;
-          //this.CarID.value = [this.CarID.options[0]];
+          console.log(this.items[0]);
 
           //this.refreshMap(dID);
           this.coordinates = dID.top(Infinity);
@@ -77,20 +77,19 @@ export default {
     refreshMap(cfDimension) {
       this.coordinates = cfDimension.top(Infinity);
     },
+    onRowSelected(items) {
+      this.selected = items
+    }
   },
   watch: {
-    CarID: {
-      handler(newVal) {
-        //dID.filter(newVal.value);
-        dID.filter(d => newVal.value.indexOf(d) > -1);
-        this.refreshMap(dID);
-      },
-      deep: true,
-    },
     selected: {
       handler(newVal){
-        console.log(newVal);
-      }
+        var selectedIDs = []
+        newVal.forEach(d => selectedIDs.push(d.CarID));
+        dID.filter(d => selectedIDs.indexOf(d) > -1);
+        this.refreshMap(dID);
+      },
+      deep:true
     }
   }
 }
@@ -106,7 +105,7 @@ export default {
   margin-top: 60px;
 }
 
-#CarIDs{
+b-table{
   height: 500px;
   overflow-y: auto;
 }

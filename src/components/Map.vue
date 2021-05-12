@@ -89,7 +89,6 @@ export default {
       var features = this.$refs.features.mapObject;
       var idList = [];
 
-      console.log(coordinates);
       const trajs = d3.group(coordinates, d => d.id); // group by id
       const trs = Array.from(trajs).map((d) => {
         idList.push(+d[0]);
