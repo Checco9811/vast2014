@@ -2,13 +2,13 @@
   <b-container>
     <b-row>
       <b-col cols="5">
-        <b-table id="CarIDs" refs="CarIDs"
+        <b-table id="CarIDs"
             :items="items"
             :fields="fields"
             :select-mode="selectMode"
             responsive="sm"
             ref="selectableTable"
-            selectable
+            selectable sticky-header="500px"
             @row-selected="onRowSelected">
         </b-table>
       </b-col>
@@ -42,7 +42,13 @@ export default {
       coordinates: [],
       items: [],
       selected: [],
-      fields: ['CarID'],
+      fields: [
+        {key:'CarID', sortable: true},
+        {key:'FirstName', sortable: true},
+        {key:'LastName', sortable: true},
+        {key:'CurrentEmploymentType', sortable: true},
+        {key: 'CurrentEmploymentTitle', sortable: true}
+      ],
       selectMode: 'multi'
     };
   },
@@ -55,15 +61,35 @@ export default {
               Timestamp: +new Date(d.Timestamp).getTime(),
               id: +d.id,
               lat: +d.lat,
-              long: +d.long
+              long: +d.long,
+              FirstName: d.FirstName,
+              LastName: d.LastName,
+              CurrentEmploymentType: d.CurrentEmploymentType,
+              CurrentEmploymentTitle: d.CurrentEmploymentTitle
             };
             return r;
           });
 
           cf = crossfilter(gpsRecord);
           dID = cf.dimension(d => d.id);
+          let dAll = cf.dimension(d => JSON.stringify ({
+            CarID: d.id ,
+            FirstName: d.FirstName,
+            LastName: d.LastName,
+            CurrentEmploymentType: d.CurrentEmploymentType,
+            CurrentEmploymentTitle: d.CurrentEmploymentTitle
+          }));
 
-          this.items = dID.group().reduceCount().all().map(v => {return {CarID: v.key}});
+          this.items = dAll.group().reduceCount().all().map(v => {
+            var tmp = JSON.parse(v.key);
+            return {
+              CarID: tmp.CarID,
+              FirstName: tmp.FirstName,
+              LastName: tmp.LastName,
+              CurrentEmploymentType: tmp.CurrentEmploymentType,
+              CurrentEmploymentTitle: tmp.CurrentEmploymentTitle
+            }});
+          //this.items = dID.group().reduceCount().all().map(v => {return {CarID: v.key}});
           this.selected = [];
 
           console.log(this.items[0]);
