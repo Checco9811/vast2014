@@ -88,20 +88,29 @@ export default {
       var map = this.$refs.map.mapObject;
       var features = this.$refs.features.mapObject;
       var idList = [];
+      var dateList = [];
 
-      const trajs = d3.group(coordinates, d => d.id); // group by id
-      const trs = Array.from(trajs).map((d) => {
+      const trajs = d3.group(coordinates, d => d.id, d => d.Date); // group by id
+      const trs = [];
+      Array.from(trajs).map((d) => {
         idList.push(+d[0]);
-        return {
-          id: +d[0],
-          //trajs: d[1].map(p => ([p.lat, p.long])),
-          trajs: d[1].sort((a, b) => a.Timestamp - b.Timestamp).map(p => ([ p.lat, p.long ])),
-        };
+        var id = d[0];
+        Array.from(d[1]).map( d => {
+          dateList.push(d[0]);
+          trs.push({
+            id: id,
+            Date: d[0],
+            //trajs: d[1].map(p => ([p.lat, p.long])),
+            trajs: d[1].sort((a, b) => a.Timestamp - b.Timestamp).map(p => ([ p.lat, p.long ])),
+          })
+        })
       });
+
+      console.log(dateList);
 
       //remove from map non selected CarIDs
       features.eachLayer(function (layer) {
-        if(!idList.includes(layer.options.id)){
+        if(!idList.includes(layer.options.id) || !dateList.includes(layer.options.Date)){
           features.removeLayer(layer);
         }
       });

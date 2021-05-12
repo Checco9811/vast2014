@@ -21,6 +21,7 @@
                                min="2014-01-06"
                                max="2014-01-19"
                                locale="en"
+                               :date-format-options="{ year: 'numeric', month: 'short', day: '2-digit', weekday: 'short' }"
                                class="mb-2"></b-form-datepicker>
           </b-col>
         </b-row>
@@ -44,6 +45,7 @@ const d3 = require('d3');
 // crossfilter data management
 let cf; // crossfilter instance
 let dID; // dimension for Id
+let dDate; // dimension for Date
 
 export default {
   name: 'App',
@@ -55,7 +57,7 @@ export default {
       coordinates: [],
       items: [],
       selected: [],
-      selectedDate: '',
+      selectedDate: null,
       fields: [
         {key:'CarID', sortable: true},
         {key:'FirstName', sortable: true},
@@ -72,7 +74,8 @@ export default {
         .then((data) => {
           const gpsRecord = data.map((d) => {
             const r = {
-              Timestamp: +new Date(d.Timestamp).getTime(),
+              Timestamp: +new Date(d.Timestamp),
+              Date: new Date(d.Timestamp).toISOString().split("T")[0],
               id: +d.id,
               lat: +d.lat,
               long: +d.long,
@@ -86,6 +89,10 @@ export default {
 
           cf = crossfilter(gpsRecord);
           dID = cf.dimension(d => d.id);
+          dDate = cf.dimension(d => d.Date);
+
+          console.log(dDate.top(Infinity));
+
           let dAll = cf.dimension(d => JSON.stringify ({
             CarID: d.id ,
             FirstName: d.FirstName,
@@ -103,13 +110,11 @@ export default {
               CurrentEmploymentType: tmp.CurrentEmploymentType,
               CurrentEmploymentTitle: tmp.CurrentEmploymentTitle
             }});
-          //this.items = dID.group().reduceCount().all().map(v => {return {CarID: v.key}});
+
           this.selected = [];
 
-          console.log(this.items[0]);
-
           //this.refreshMap(dID);
-          this.coordinates = dID.top(Infinity);
+          this.coordinates = dDate.top(Infinity);
         });
 
   },
@@ -129,8 +134,16 @@ export default {
         dID.filter(d => selectedIDs.indexOf(d) > -1);
         this.refreshMap(dID);
       },
-      deep:true
+      //deep:true
+    },
+    selectedDate: {
+      handler(newDate){
+        dDate.filter(newDate);
+        this.refreshMap(dDate);
+      },
+      //deep: true
     }
+
   }
 }
 </script>
