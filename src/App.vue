@@ -3,24 +3,11 @@
 <template>
   <b-container>
     <b-row>
-      <b-col cols="3">
-
+      <b-col cols="5">
+        <Table :items="items" :selected="selected" id="CarIDs"></Table>
       </b-col>
       <b-col>
         <Map :coordinates="coordinates"></Map>
-      </b-col>
-      <b-col cols="3">
-        <b-form-group label="Select CarIDs" id="CarIDs">
-          <b-form-checkbox-group
-              size="lg"
-              v-model="CarID.value"
-              :options="CarID.options"
-              name="buttonsCarId"
-              buttons
-              stacked
-              style="width: 100%"
-          ></b-form-checkbox-group>
-        </b-form-group>
       </b-col>
     </b-row>
 
@@ -30,6 +17,7 @@
 
 <script>
 import Map from '@/components/Map';
+import Table from "@/components/Table";
 
 import crossfilter from 'crossfilter';
 
@@ -42,11 +30,14 @@ let dID; // dimension for Id
 export default {
   name: 'App',
   components: {
+    Table,
     Map
   },
   data () {
     return {
       coordinates: [],
+      items: [],
+      selected: null,
       CarID: {
         value: [1, 2],
         options: [1, 2, 3]
@@ -55,7 +46,7 @@ export default {
   },
   mounted(){
 
-    d3.csv('gps.csv')
+    d3.csv('gps-joined.csv')
         .then((data) => {
           const gpsRecord = data.map((d) => {
             const r = {
@@ -70,9 +61,12 @@ export default {
           cf = crossfilter(gpsRecord);
           dID = cf.dimension(d => d.id);
 
-          this.CarID.options = dID.group().reduceCount().all().map(v => v.key);
+          this.items = dID.group().reduceCount().all().map(v => {return {CarID: v.key}});
+          console.log(this.items);
+
+          //this.CarID.options = dID.group().reduceCount().all().map(v => v.key);
           //this.CarID.value = this.CarID.options;
-          this.CarID.value = [this.CarID.options[0]];
+          //this.CarID.value = [this.CarID.options[0]];
 
           //this.refreshMap(dID);
           this.coordinates = dID.top(Infinity);
@@ -93,6 +87,11 @@ export default {
       },
       deep: true,
     },
+    selected: {
+      handler(newVal){
+        console.log(newVal);
+      }
+    }
   }
 }
 </script>
@@ -111,5 +110,6 @@ export default {
   height: 500px;
   overflow-y: auto;
 }
+
 
 </style>
