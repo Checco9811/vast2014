@@ -53,6 +53,7 @@ export default {
   },
   mounted(){
     var map = this.$refs.map.mapObject;
+    const specialGoods = ["MAXIMUM IRON AND STILL", "Frank's Fuels", "ABILA SCRAP", "PUMP"];
 
     //Loading map
     d3.json('Abila.geojson')
@@ -91,7 +92,11 @@ export default {
 
                 // eslint-disable-next-line no-unused-vars
                 function getColor(d) {
-                 return "#ff7800";
+                  console.log(specialGoods, d.properties.name);
+                  if(specialGoods.includes(d.properties.name))
+                    return "#ff7800";
+                  else
+                    return "green";
                 }
 
                 function style(feature) {
