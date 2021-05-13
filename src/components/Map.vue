@@ -51,30 +51,43 @@ export default {
     }
   },
   mounted(){
+    var map = this.$refs.map.mapObject;
+
     //Loading map
     d3.json('Abila.geojson')
         .then((data) => {
           this.geoJson = data;
+
+          //Loading locations
+          d3.json('location.geojson')
+              .then((data) => {
+                L.geoJSON(data, {
+                  pointToLayer: function (feature, latlng) {
+                    return L.circleMarker(latlng, style(feature));
+                  },
+                  onEachFeature: function onEachFeature(feature, layer) {
+                    layer.bindPopup(feature.properties.name);
+                  }
+                }).addTo(map);
+
+                // eslint-disable-next-line no-unused-vars
+                function getColor(d) {
+                 return "#ff7800";
+                }
+
+                function style(feature) {
+                  return {
+                    radius: 5,
+                    fillColor: getColor(feature),
+                    color: "#000",
+                    weight: 1,
+                    opacity: 1,
+                    fillOpacity: 0.7
+                  };
+                }
+
+              });
         });
-
-    var map = this.$refs.map.mapObject;
-
-    //Loading locations
-    d3.json('location.geojson')
-        .then((data) => {
-          L.geoJSON(data, {
-            function(geoJsonPoint, latlng) {
-              return L.marker(latlng, {icon: L.icon({
-                                                iconSize: [1, 1], // size of the icon
-                                                })});
-            },
-            onEachFeature: function onEachFeature(feature, layer) {
-            layer.bindPopup(feature.properties.name);
-          }
-          }).addTo(map);
-        });
-
-
   },
   watch:{
     coordinates: {
@@ -135,6 +148,23 @@ export default {
         polyline.addTo(features);
       });
 
+    }
+  },
+  createTrajectories(coordinates){
+    // eslint-disable-next-line no-unused-vars
+    var t=0;
+    const result = [];
+    var tmp = [];
+
+    for (var i = 0; i < coordinates.length; i++) {
+      if(coordinates[i+1].Timestamp - coordinates[i].Timestamp > 2) {
+        result.push({
+          t: tmp
+        });
+        tmp = [];
+        t++;
+      }
+      tmp.push([coordinates[i].lat, coordinates[i].long])
     }
   }
 
