@@ -70,6 +70,16 @@ export default {
                   }
                 }).addTo(map);
 
+                L.control.legend({
+                  items: [
+                    {color: 'red', label: 'reserved'},
+                    {color: 'blue', label: 'not reserved'}
+                  ],
+                  collapsed: true,
+                  // insert different label for the collapsed legend button.
+                  buttonHtml: 'legend'
+                }).addTo(map);
+
                 // eslint-disable-next-line no-unused-vars
                 function getColor(d) {
                  return "#ff7800";
