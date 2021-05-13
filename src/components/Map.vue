@@ -1,7 +1,7 @@
 <template>
   <l-map ref="map" style="height: 500px; weight: 100%;" :zoom="zoom" :center="center" :maxBounds="maxBounds">
     <l-tile-layer :url="url"></l-tile-layer>
-    <l-geo-json :geojson="geoJson"></l-geo-json>
+    <l-geo-json :geojson="geoJson" :optionsStyle="mapStyle"></l-geo-json>
     <l-layer-group ref="features">
     </l-layer-group>
   </l-map>
@@ -47,6 +47,7 @@ export default {
           [[36.03771731908686, 24.793739318847656],
             [36.09904766316007, 24.91905212402343]]
       ),
+      mapStyle: {"color": "grey", "opacity": 1},
       geoJson: null,
     }
   },
@@ -72,12 +73,20 @@ export default {
 
                 L.control.legend({
                   items: [
-                    {color: 'red', label: 'reserved'},
-                    {color: 'blue', label: 'not reserved'}
+                    {color: 'orange', label: 'SpecialGoods'},
+                    {color: 'red', label: 'transportation'},
+                    {color: 'brown', label: 'GAStech'},
+                    {color: 'grey', label: 'Unknown'},
+                    {color: 'blue', label: 'Shop'},
+                    {color: 'green', label: 'Park'},
+                    {color: 'violet', label: 'Restaurant'},
+                    {color: 'pink', label: 'SpecialMeeting'},
+                    {color: 'yellow', label: 'Uncertain'},
                   ],
-                  collapsed: true,
+                  collapsed: false,
+                  position: 'topright',
                   // insert different label for the collapsed legend button.
-                  buttonHtml: 'legend'
+                  buttonHtml: 'Legend'
                 }).addTo(map);
 
                 // eslint-disable-next-line no-unused-vars
