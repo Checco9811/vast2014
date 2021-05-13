@@ -10,7 +10,6 @@
 <script>
 const d3 = require('d3');
 import L from 'leaflet';
-import LL from 'leaflet-legend';
 import { latLngBounds } from "leaflet";
 import { LMap, LTileLayer, LMarker, LGeoJson, LPolyline, LLayerGroup, LFeatureGroup} from 'vue2-leaflet';
 
@@ -70,15 +69,6 @@ export default {
                     layer.bindPopup(feature.properties.name);
                   }
                 }).addTo(map);
-
-                var Legend =  new LL.Control.Legend({
-                  position: 'topleft',
-                  collapsed: true,
-                  controlButton: {
-                    title: "Legend"
-                  }
-                });
-                map.addControl(Legend);
 
                 // eslint-disable-next-line no-unused-vars
                 function getColor(d) {
