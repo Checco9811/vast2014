@@ -27,7 +27,13 @@
 
         </b-row>
         <b-row>
-
+          <b-col>
+            <vue-slider
+                v-model="timeRange"
+                :dot-options="dotOptions"
+                :order="false"
+            ></vue-slider>
+          </b-col>
         </b-row>
       </b-col>
 
@@ -56,6 +62,7 @@
 import Map from '@/components/Map';
 
 import crossfilter from 'crossfilter';
+import VueSlider from "vue-slider-component";
 
 const d3 = require('d3');
 
@@ -67,7 +74,8 @@ let dDate; // dimension for Date
 export default {
   name: 'App',
   components: {
-    Map
+    Map,
+    VueSlider
   },
   data () {
     return {
@@ -76,6 +84,8 @@ export default {
       selected: [],
       selectedDate: [],
       dateOptions: [],
+      dotOptions:[{disabled:false}, {disabled: false}],
+      timeRange: ['00:01', '23:59'],
       ccRecord: [],
       fields: [
         {key:'CarID', sortable: true},
