@@ -4,6 +4,8 @@
     <l-geo-json :geojson="geoJson" :optionsStyle="mapStyle"></l-geo-json>
     <l-layer-group ref="features">
     </l-layer-group>
+    <l-layer-group ref="ccRecords">
+    </l-layer-group>
   </l-map>
 </template>
 
@@ -30,6 +32,10 @@ export default {
   },
   props:{
     coordinates:{
+      type: Array,
+      default:() => ([])
+    },
+    ccRecord:{
       type: Array,
       default:() => ([])
     }
@@ -116,6 +122,16 @@ export default {
       handler(newCoordinates){
         this.refreshMap(newCoordinates);
       }
+    },
+    ccRecord: {
+      handler(newCcRecords){
+        var features = this.$refs.ccRecords.mapObject;
+
+        newCcRecords.forEach(d => {
+          L.circleMarker([d.lat, d.long]).addTo(features);
+        });
+
+      }
     }
   },
   methods:{
@@ -141,12 +157,19 @@ export default {
         })
       });
 
-      //remove from map non selected CarIDs
+      //console.log(idList);
+      //console.log(dateList);
+
+      features.clearLayers();
+
+      /*
+      //remove from map non selected CarIDs & Dates
       features.eachLayer(function (layer) {
         if(!idList.includes(layer.options.id) || !dateList.includes(layer.options.Date)){
           features.removeLayer(layer);
         }
       });
+       */
 
       var i=0;
 
@@ -154,17 +177,19 @@ export default {
       trs.forEach(d => {
         var polyline = L.polyline(d.trajs,
             {
-              color: this.colors[i],
+              //color: this.colors[i],
+              color: 'red',
               weight: 2,
-              smoothFactor: 2.5,
+              smoothFactor: 3,
               //opacity: 1.0,
-              id: d.id
+              id: d.id,
+              Date: d.Date
             });
 
         polyline.on('mouseover', function(e) {
           L.popup()
             .setLatLng(e.latlng)
-            .setContent('CarID: '+d.id)
+            .setContent('CarID: '+d.id + ' ' + d.Date)
             .openOn(map);
         });
 

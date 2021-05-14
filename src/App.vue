@@ -32,7 +32,7 @@
       </b-col>
 
       <b-col>
-        <Map :coordinates="coordinates"></Map>
+        <Map :coordinates="coordinates" :ccRecord="ccRecord"></Map>
       </b-col>
 
       <b-col cols="2">
@@ -76,6 +76,7 @@ export default {
       selected: [],
       selectedDate: [],
       dateOptions: [],
+      ccRecord: [],
       fields: [
         {key:'CarID', sortable: true},
         {key:'FirstName', sortable: true},
@@ -106,6 +107,8 @@ export default {
           return r;
         });
 
+        this.ccRecord = ccRecord;
+
         console.log(ccRecord);
       });
 
@@ -130,8 +133,6 @@ export default {
           dID = cf.dimension(d => d.id);
           dDate = cf.dimension(d => d.Date);
 
-          console.log(dDate.top(Infinity));
-
           let dAll = cf.dimension(d => JSON.stringify ({
             CarID: d.id ,
             FirstName: d.FirstName,
@@ -150,11 +151,13 @@ export default {
               LastName: tmp.LastName,
               CurrentEmploymentType: tmp.CurrentEmploymentType,
               CurrentEmploymentTitle: tmp.CurrentEmploymentTitle
-            }});
+            }
+          });
 
           this.toggleBusy();
 
           this.selected = [];
+          this.selectedDate = [];
 
           //this.refreshMap(dID);
           this.coordinates = dID.top(Infinity);
@@ -186,17 +189,16 @@ export default {
         dID.filter(d => selectedIDs.indexOf(d) > -1);
         this.refreshMap(dID);
       },
-      //deep:true
+      deep:true
     },
     selectedDate: {
       handler(newDate){
-        console.log(newDate);
         var selectedDates = []
         newDate.forEach(d => selectedDates.push(d));
         dDate.filter(d => selectedDates.indexOf(d) > -1);
         this.refreshMap(dDate);
       },
-      //deep: true
+      deep: true
     },
   }
 }
