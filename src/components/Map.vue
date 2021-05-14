@@ -42,6 +42,7 @@ export default {
   },
   data () {
     return {
+      specialGoods: [],
       url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       zoom: 13,
       center: [36.070512, 24.864487],
@@ -53,14 +54,16 @@ export default {
           [[36.03771731908686, 24.793739318847656],
             [36.09904766316007, 24.91905212402343]]
       ),
-      mapStyle: {"color": "grey", "opacity": 1},
+      mapStyle: {"color": "grey", "opacity": 0.5},
       geoJson: null,
-      colors: ['#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928'] // qualitative colors
+      colors: ['#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928'], // qualitative colors
     }
   },
   mounted(){
     var map = this.$refs.map.mapObject;
-    const specialGoods = ["MAXIMUM IRON AND STILL", "Frank's Fuels", "ABILA SCRAP", "PUMP"];
+    const specialGoods = new Array("MAXIMUM IRON AND STILL", "Frank's Fuels", "ABILA SCRAP", "PUMP");
+    const transportation = ['Abila Airport', 'Port Of Abila'];
+    const park = ['Pilau Park', 'Abila Park', 'Desafio Golf Course'];
 
     //Loading map
     d3.json('Abila.geojson')
@@ -75,7 +78,7 @@ export default {
                     return L.circleMarker(latlng, style(feature));
                   },
                   onEachFeature: function onEachFeature(feature, layer) {
-                    layer.bindPopup(feature.properties.name);
+                    layer.bindPopup(feature.properties.name, {permanent: true});
                   }
                 }).addTo(map);
 
@@ -99,13 +102,15 @@ export default {
                 function getColor(d) {
                   if(specialGoods.includes(d.properties.name))
                     return "#ff7800";
+                  else if(transportation.includes(d.properties.name))
+                    return "#FF0000"
                   else
-                    return "green";
+                    return "black";
                 }
 
                 function style(feature) {
                   return {
-                    radius: 5,
+                    radius: 10,
                     fillColor: getColor(feature),
                     color: "#000",
                     weight: 1,
@@ -125,12 +130,43 @@ export default {
     },
     ccRecord: {
       handler(newCcRecords){
-        var features = this.$refs.ccRecords.mapObject;
+        const specialGoods = new Array("MAXIMUM IRON AND STILL", "Frank's Fuels", "ABILA SCRAP", "PUMP");
+        const transportation = ['Abila Airport', 'Port Of Abila'];
+
+        var map = this.$refs.map.mapObject;
+        var ccRecordLayer = this.$refs.ccRecords.mapObject;
 
         newCcRecords.forEach(d => {
-          L.circleMarker([d.lat, d.long]).addTo(features);
+          var point = L.circleMarker([d.lat, d.long], style(d.location));
+          point.on('mouseover', function(e) {
+            L.popup()
+                .setLatLng(e.latlng)
+                .setContent('<h1>'+d.CarID+'</h1>'+d.id + ' ' + d.location)
+                .openOn(map);
+          });
+
+          point.addTo(ccRecordLayer);
         });
 
+        function getColor(d) {
+          if(specialGoods.includes(d))
+            return "#ff7800";
+          else if(transportation.includes(d))
+            return "#FF0000"
+          else
+            return "black";
+        }
+
+        function style(feature) {
+          return {
+            radius: 2.5,
+            fillColor: getColor(feature),
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.7
+          };
+        }
       }
     }
   },
@@ -178,10 +214,10 @@ export default {
         var polyline = L.polyline(d.trajs,
             {
               //color: this.colors[i],
-              color: 'red',
+              color: 'black',
               weight: 2,
               smoothFactor: 3,
-              //opacity: 1.0,
+              opacity: 0.4,
               id: d.id,
               Date: d.Date
             });
@@ -189,7 +225,7 @@ export default {
         polyline.on('mouseover', function(e) {
           L.popup()
             .setLatLng(e.latlng)
-            .setContent('CarID: '+d.id + ' ' + d.Date)
+            .setContent('<p>'+d.id+'</p>' + ' ' + d.Date)
             .openOn(map);
         });
 
