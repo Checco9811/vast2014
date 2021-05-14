@@ -3,7 +3,9 @@
     <b-row>
       <b-col cols="4">
         <b-row>
-          <b-table id="CarIDs"
+          <b-table
+              id="CarIDs"
+              :busy="isBusy"
               :items="items"
               :fields="fields"
               :select-mode="selectMode"
@@ -11,18 +13,27 @@
               ref="selectableTable"
               selectable sticky-header="300px"
               @row-selected="onRowSelected">
+
+            <template #table-busy>
+              <div class="text-center text-danger my-2">
+                <b-spinner label="Loading..." class="align-middle"></b-spinner>
+                <strong>Loading...</strong>
+              </div>
+            </template>
+
           </b-table>
         </b-row>
         <b-row>
           <b-col>
             <label>Choose a Date</label>
-            <b-form-datepicker id="example-datepicker"
-                               v-model="selectedDate"
-                               min="2014-01-06"
-                               max="2014-01-19"
-                               locale="en"
-                               :date-format-options="{ year: 'numeric', month: 'short', day: '2-digit', weekday: 'short' }"
-                               class="mb-2"></b-form-datepicker>
+            <b-form-datepicker
+                id="example-datepicker"
+                v-model="selectedDate"
+                min="2014-01-06"
+                max="2014-01-19"
+                locale="en"
+                :date-format-options="{ year: 'numeric', month: 'short', day: '2-digit', weekday: 'short' }"
+                class="mb-2"></b-form-datepicker>
           </b-col>
         </b-row>
       </b-col>
@@ -65,7 +76,8 @@ export default {
         {key:'CurrentEmploymentType', sortable: true},
         {key: 'CurrentEmploymentTitle', sortable: true}
       ],
-      selectMode: 'multi'
+      selectMode: 'multi',
+      isBusy: true,
     };
   },
   mounted(){
@@ -111,6 +123,8 @@ export default {
               CurrentEmploymentTitle: tmp.CurrentEmploymentTitle
             }});
 
+          this.toggleBusy();
+
           this.selected = [];
 
           //this.refreshMap(dID);
@@ -124,6 +138,9 @@ export default {
     },
     onRowSelected(items) {
       this.selected = items
+    },
+    toggleBusy() {
+      this.isBusy = !this.isBusy
     }
   },
   watch: {
