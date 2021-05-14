@@ -27,17 +27,7 @@
 
         </b-row>
         <b-row>
-          <b-col>
-            <label>Choose a Date</label>
-            <b-form-datepicker
-                id="example-datepicker"
-                v-model="selectedDate"
-                min="2014-01-06"
-                max="2014-01-19"
-                locale="en"
-                :date-format-options="{ year: 'numeric', month: 'short', day: '2-digit', weekday: 'short' }"
-                class="mb-2"></b-form-datepicker>
-          </b-col>
+
         </b-row>
       </b-col>
 
@@ -167,7 +157,7 @@ export default {
           this.selected = [];
 
           //this.refreshMap(dID);
-          this.coordinates = dDate.top(Infinity);
+          this.coordinates = dID.top(Infinity);
         });
 
   },
@@ -193,7 +183,6 @@ export default {
       handler(newVal){
         var selectedIDs = []
         newVal.forEach(d => selectedIDs.push(d.CarID));
-        console.log(selectedIDs);
         dID.filter(d => selectedIDs.indexOf(d) > -1);
         this.refreshMap(dID);
       },
@@ -201,7 +190,10 @@ export default {
     },
     selectedDate: {
       handler(newDate){
-        dDate.filter(newDate);
+        console.log(newDate);
+        var selectedDates = []
+        newDate.forEach(d => selectedDates.push(d));
+        dDate.filter(d => selectedDates.indexOf(d) > -1);
         this.refreshMap(dDate);
       },
       //deep: true

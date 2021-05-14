@@ -87,13 +87,10 @@ export default {
                   ],
                   collapsed: false,
                   position: 'topright',
-                  // insert different label for the collapsed legend button.
                   buttonHtml: 'Legend'
                 }).addTo(map);
 
-                // eslint-disable-next-line no-unused-vars
                 function getColor(d) {
-                  console.log(specialGoods, d.properties.name);
                   if(specialGoods.includes(d.properties.name))
                     return "#ff7800";
                   else
@@ -144,8 +141,6 @@ export default {
         })
       });
 
-      console.log(dateList);
-
       //remove from map non selected CarIDs
       features.eachLayer(function (layer) {
         if(!idList.includes(layer.options.id) || !dateList.includes(layer.options.Date)){
@@ -155,7 +150,7 @@ export default {
 
       var i=0;
 
-      //add to map the new CarIDs
+      //add to map the new trajectories
       trs.forEach(d => {
         var polyline = L.polyline(d.trajs,
             {
