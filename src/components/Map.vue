@@ -49,7 +49,7 @@ export default {
       ),
       mapStyle: {"color": "grey", "opacity": 1},
       geoJson: null,
-      colors: ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928'] // 12 qualitative colors
+      colors: ['#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928'] // qualitative colors
     }
   },
   mounted(){
@@ -153,11 +153,13 @@ export default {
         }
       });
 
+      var i=0;
+
       //add to map the new CarIDs
       trs.forEach(d => {
         var polyline = L.polyline(d.trajs,
             {
-              color: 'green',
+              color: this.colors[i],
               weight: 2,
               smoothFactor: 2.5,
               //opacity: 1.0,
@@ -172,6 +174,7 @@ export default {
         });
 
         polyline.addTo(features);
+        i++;
       });
 
     }

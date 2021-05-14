@@ -20,8 +20,11 @@
                 <strong>Loading...</strong>
               </div>
             </template>
-
           </b-table>
+
+          <b-button size="sm" @click="selectAllRows">Select all</b-button>
+          <b-button size="sm" @click="clearSelected">Clear selected</b-button>
+
         </b-row>
         <b-row>
           <b-col>
@@ -161,6 +164,12 @@ export default {
     },
     toggleBusy() {
       this.isBusy = !this.isBusy
+    },
+    selectAllRows() {
+      this.$refs.selectableTable.selectAllRows()
+    },
+    clearSelected() {
+      this.$refs.selectableTable.clearSelected()
     }
   },
   watch: {
@@ -179,8 +188,7 @@ export default {
         this.refreshMap(dDate);
       },
       //deep: true
-    }
-
+    },
   }
 }
 </script>
