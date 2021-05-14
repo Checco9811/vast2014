@@ -40,8 +40,21 @@
           </b-col>
         </b-row>
       </b-col>
+
       <b-col>
         <Map :coordinates="coordinates"></Map>
+      </b-col>
+
+      <b-col cols="2">
+        <b-form-group
+            label="Select Dates">
+          <b-form-checkbox-group
+              v-model="selectedDate"
+              :options="dateOptions"
+              name="dateSelector"
+              stacked
+          ></b-form-checkbox-group>
+        </b-form-group>
       </b-col>
     </b-row>
 
@@ -71,7 +84,8 @@ export default {
       coordinates: [],
       items: [],
       selected: [],
-      selectedDate: null,
+      selectedDate: [],
+      dateOptions: [],
       fields: [
         {key:'CarID', sortable: true},
         {key:'FirstName', sortable: true},
@@ -136,6 +150,8 @@ export default {
             CurrentEmploymentTitle: d.CurrentEmploymentTitle
           }));
 
+          this.dateOptions = dDate.group().reduceCount().all().map(v => v.key);
+
           this.items = dAll.group().reduceCount().all().map(v => {
             var tmp = JSON.parse(v.key);
             return {
@@ -177,6 +193,7 @@ export default {
       handler(newVal){
         var selectedIDs = []
         newVal.forEach(d => selectedIDs.push(d.CarID));
+        console.log(selectedIDs);
         dID.filter(d => selectedIDs.indexOf(d) > -1);
         this.refreshMap(dID);
       },
