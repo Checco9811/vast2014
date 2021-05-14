@@ -82,6 +82,26 @@ export default {
   },
   mounted(){
 
+    d3.csv('cc_data_processed.csv')
+      .then((data) => {
+        const ccRecord = data.map((d) => {
+          const r = {
+            Timestamp: +new Date(d.timestamp),
+            id: +d.CarID,
+            lat: +d.lat,
+            long: +d.long,
+            FirstName: d.FirstName,
+            LastName: d.LastName,
+            price: d.price,
+            location: d.location
+          }
+
+          return r;
+        });
+
+        console.log(ccRecord);
+      });
+
     d3.csv('gps-joined.csv')
         .then((data) => {
           const gpsRecord = data.map((d) => {

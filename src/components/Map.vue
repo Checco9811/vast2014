@@ -49,6 +49,7 @@ export default {
       ),
       mapStyle: {"color": "grey", "opacity": 1},
       geoJson: null,
+      colors: ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928'] // 12 qualitative colors
     }
   },
   mounted(){
@@ -157,18 +158,19 @@ export default {
         var polyline = L.polyline(d.trajs,
             {
               color: 'green',
-              weight: 5,
-              opacity: .7,
-              lineJoin: 'roud',
+              weight: 2,
+              smoothFactor: 2.5,
+              //opacity: 1.0,
               id: d.id
             });
+
         polyline.on('mouseover', function(e) {
           L.popup()
             .setLatLng(e.latlng)
             .setContent('CarID: '+d.id)
             .openOn(map);
         });
-        //polyline.bindTooltip(d.id+"");
+
         polyline.addTo(features);
       });
 
