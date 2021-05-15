@@ -54,10 +54,11 @@
     <b-row>
       <b-col>
         <HistogramSlider
+            :key="componentKey"
             style="margin: 200px auto"
             :width="1000"
             :bar-height="100"
-            :data="coordinates.map(d => {return d.Minutes})"
+            :data="dataForHist"
             :drag-interval="true"
             :force-edges="false"
             :prettify="prettify"
@@ -65,8 +66,8 @@
             :step="1"
             :min="1"
             :max="1440"
-            @change="sliderChange"
-            @update="sliderUpdate"/>
+            @finish="sliderChange"
+            @start="updateChange"/>
       </b-col>
     </b-row>
 
@@ -95,6 +96,7 @@ export default {
   data () {
     return {
       coordinates: [],
+      dataForHist: [],
       items: [],
       selected: [],
       selectedDate: [],
@@ -110,6 +112,9 @@ export default {
       ],
       selectMode: 'multi',
       isBusy: true,
+      componentKey: 0,
+      min: 1,
+      max: 1440,
       prettify: function(ts) {
         var date = new Date(0);
         date.setSeconds(ts*60);
@@ -166,7 +171,7 @@ export default {
           this.selected = [];
           this.selectedDate = [];
 
-          this.refreshMap(dID);
+          this.refreshMap(dID.filter(null));
 
           d3.csv('cc_data_processed.csv')
               .then((data) => {
@@ -194,6 +199,8 @@ export default {
   methods: {
     refreshMap(cfDimension) {
       this.coordinates = cfDimension.top(Infinity);
+      this.dataForHist = cfDimension.top(Infinity).map(d => d.Minutes);
+      this.forceRerender();
     },
     onRowSelected(items) {
       this.selected = items
@@ -209,13 +216,22 @@ export default {
     },
     sliderChange(newVal){
       console.log(newVal.from, newVal.to);
+      this.min = newVal.from;
+      this.max = newVal.to;
       dMinutes.filter(function (d) {
         return d >= newVal.from && d <= newVal.to;
       });
       this.refreshMap(dMinutes);
     },
-    sliderUpdate(newVal){
+    updateChange(newVal){
       console.log(newVal);
+      newVal.from = this.min;
+      newVal.to = this.max;
+
+    },
+    forceRerender(){
+      this.componentKey += 1;
+      this.$refs
     }
   },
   watch: {
