@@ -51,7 +51,25 @@
               stacked
           ></b-form-checkbox-group>
         </b-form-group>
+
       </b-col>
+    </b-row>
+
+    <b-row>
+      <HistogramSlider
+          style="margin: 200px auto"
+          :width="1000"
+          :bar-height="150"
+          :data="[]"
+          :drag-interval="true"
+          :force-edges="false"
+          :prettify="prettify"
+          :colors="['#4facfe', '#00f2fe']"
+          :step="1"
+          :min="min"
+          :max="max"
+          @change="sliderUpdate"
+      />
     </b-row>
 
   </b-container>
@@ -70,6 +88,7 @@ const d3 = require('d3');
 let cf; // crossfilter instance
 let dID; // dimension for Id
 let dDate; // dimension for Date
+let dHour; // dimension for Hour
 
 export default {
   name: 'App',
@@ -80,6 +99,7 @@ export default {
   data () {
     return {
       coordinates: [],
+      coordinatesTest: [],
       items: [],
       selected: [],
       selectedDate: [],
@@ -96,6 +116,17 @@ export default {
       ],
       selectMode: 'multi',
       isBusy: true,
+      min: 1,
+      max: 1440,
+      //min: new Date(2014,1,6,0,0,0).valueOf(),
+      //max: new Date(2014,1,19,0,0,0).valueOf(),
+      prettify: function(ts) {
+        var date = new Date(0);
+        date.setSeconds(ts*60); // specify value for SECONDS here
+        var timeString = date.toISOString().substr(11, 8);
+        return timeString;
+      }
+
     };
   },
   mounted(){
@@ -105,6 +136,7 @@ export default {
             const r = {
               Timestamp: +new Date(d.Timestamp),
               Date: new Date(d.Timestamp).toISOString().split("T")[0],
+              Hour: new Date(d.Timestamp).toISOString().split("T")[1],
               id: +d.id,
               lat: +d.lat,
               long: +d.long,
@@ -116,9 +148,12 @@ export default {
             return r;
           });
 
+          console.log(gpsRecord);
+
           cf = crossfilter(gpsRecord);
           dID = cf.dimension(d => d.id);
           dDate = cf.dimension(d => d.Date);
+          dHour = cf.dimension(d => d.Hour);
 
           let dAll = cf.dimension(d => JSON.stringify ({
             CarID: d.id ,
@@ -148,6 +183,7 @@ export default {
 
           //this.refreshMap(dID);
           this.coordinates = dID.top(Infinity);
+          this.coordinatesTest = this.coordinates.map(d => {return d.Timestamp.valueOf()})
 
           d3.csv('cc_data_processed.csv')
               .then((data) => {
@@ -188,6 +224,9 @@ export default {
     },
     clearSelected() {
       this.$refs.selectableTable.clearSelected()
+    },
+    sliderUpdate(newVal){
+      console.log(newVal.from, newVal.to);
     }
   },
   watch: {

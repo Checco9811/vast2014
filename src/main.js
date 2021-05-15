@@ -12,9 +12,13 @@ import { LMap, LTileLayer, LMarker } from 'vue2-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Icon } from 'leaflet';
 
+import HistogramSlider from "vue-histogram-slider";
+import "vue-histogram-slider/dist/histogram-slider.css";
+
 import VueSlider from 'vue-slider-component'
 import 'vue-slider-component/theme/default.css'
 
+Vue.component(HistogramSlider.name, HistogramSlider);
 Vue.component('VueSlider', VueSlider)
 Vue.component('l-map', LMap);
 Vue.component('l-tile-layer', LTileLayer);
