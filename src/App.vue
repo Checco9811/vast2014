@@ -28,11 +28,7 @@
         </b-row>
         <b-row>
           <b-col>
-            <vue-slider
-                v-model="timeRange"
-                :dot-options="dotOptions"
-                :order="false"
-            ></vue-slider>
+
           </b-col>
         </b-row>
       </b-col>
@@ -56,20 +52,22 @@
     </b-row>
 
     <b-row>
-      <HistogramSlider
-          style="margin: 200px auto"
-          :width="1000"
-          :bar-height="150"
-          :data="[]"
-          :drag-interval="true"
-          :force-edges="false"
-          :prettify="prettify"
-          :colors="['#4facfe', '#00f2fe']"
-          :step="1"
-          :min="min"
-          :max="max"
-          @change="sliderUpdate"
-      />
+      <b-col>
+        <HistogramSlider
+            style="margin: 200px auto"
+            :width="1000"
+            :bar-height="100"
+            :data="coordinates.map(d => {return d.Minutes})"
+            :drag-interval="true"
+            :force-edges="false"
+            :prettify="prettify"
+            :colors="['#4facfe', '#00f2fe']"
+            :step="1"
+            :min="1"
+            :max="1440"
+            @change="sliderChange"
+            @update="sliderUpdate"/>
+      </b-col>
     </b-row>
 
   </b-container>
@@ -78,9 +76,8 @@
 
 <script>
 import Map from '@/components/Map';
-
 import crossfilter from 'crossfilter';
-import VueSlider from "vue-slider-component";
+import moment from 'moment';
 
 const d3 = require('d3');
 
@@ -88,24 +85,21 @@ const d3 = require('d3');
 let cf; // crossfilter instance
 let dID; // dimension for Id
 let dDate; // dimension for Date
-let dHour; // dimension for Hour
+let dMinutes; // dimension for Minutes passed from 00:00
 
 export default {
   name: 'App',
   components: {
     Map,
-    VueSlider
   },
   data () {
     return {
       coordinates: [],
-      coordinatesTest: [],
       items: [],
       selected: [],
       selectedDate: [],
       dateOptions: [],
       dotOptions:[{disabled:false}, {disabled: false}],
-      timeRange: ['00:01', '23:59'],
       ccRecord: [],
       fields: [
         {key:'CarID', sortable: true},
@@ -116,15 +110,10 @@ export default {
       ],
       selectMode: 'multi',
       isBusy: true,
-      min: 1,
-      max: 1440,
-      //min: new Date(2014,1,6,0,0,0).valueOf(),
-      //max: new Date(2014,1,19,0,0,0).valueOf(),
       prettify: function(ts) {
         var date = new Date(0);
-        date.setSeconds(ts*60); // specify value for SECONDS here
-        var timeString = date.toISOString().substr(11, 8);
-        return timeString;
+        date.setSeconds(ts*60);
+        return date.toISOString().substr(11, 5);
       }
 
     };
@@ -133,10 +122,13 @@ export default {
     d3.csv('gps-joined.csv')
         .then((data) => {
           const gpsRecord = data.map((d) => {
+            const timestamp = new Date(d.Timestamp);
+            const yyyymmdd = timestamp.toISOString().split("T")[0];
+            const hhmmss = timestamp.toISOString().split("T")[1].split(".")[0];
             const r = {
-              Timestamp: +new Date(d.Timestamp),
-              Date: new Date(d.Timestamp).toISOString().split("T")[0],
-              Hour: new Date(d.Timestamp).toISOString().split("T")[1],
+              Timestamp: timestamp,
+              Date: yyyymmdd,
+              Minutes: moment.duration(hhmmss).asMinutes(),
               id: +d.id,
               lat: +d.lat,
               long: +d.long,
@@ -148,42 +140,33 @@ export default {
             return r;
           });
 
-          console.log(gpsRecord);
+          //console.log(gpsRecord);
 
           cf = crossfilter(gpsRecord);
           dID = cf.dimension(d => d.id);
           dDate = cf.dimension(d => d.Date);
-          dHour = cf.dimension(d => d.Hour);
+          dMinutes = cf.dimension(d => d.Minutes);
 
-          let dAll = cf.dimension(d => JSON.stringify ({
-            CarID: d.id ,
-            FirstName: d.FirstName,
-            LastName: d.LastName,
-            CurrentEmploymentType: d.CurrentEmploymentType,
-            CurrentEmploymentTitle: d.CurrentEmploymentTitle
-          }));
-
+          //finding unique values for the options
           this.dateOptions = dDate.group().reduceCount().all().map(v => v.key);
-
-          this.items = dAll.group().reduceCount().all().map(v => {
-            var tmp = JSON.parse(v.key);
+          const uniqueStrings = new Set(gpsRecord.map(d => { //slice to consider less record?
             return {
-              CarID: tmp.CarID,
-              FirstName: tmp.FirstName,
-              LastName: tmp.LastName,
-              CurrentEmploymentType: tmp.CurrentEmploymentType,
-              CurrentEmploymentTitle: tmp.CurrentEmploymentTitle
+              CarID: d.id,
+              FirstName: d.FirstName,
+              LastName: d.LastName,
+              CurrentEmploymentType: d.CurrentEmploymentType,
+              CurrentEmploymentTitle: d.CurrentEmploymentTitle
             }
-          });
+          }).map(JSON.stringify));
+          const uniqueStringsArray = Array.from(uniqueStrings);
+          this.items = uniqueStringsArray.map(JSON.parse);
 
           this.toggleBusy();
 
           this.selected = [];
           this.selectedDate = [];
 
-          //this.refreshMap(dID);
-          this.coordinates = dID.top(Infinity);
-          this.coordinatesTest = this.coordinates.map(d => {return d.Timestamp.valueOf()})
+          this.refreshMap(dID);
 
           d3.csv('cc_data_processed.csv')
               .then((data) => {
@@ -203,8 +186,7 @@ export default {
                 });
 
                 //this.ccRecord = ccRecord;
-
-                console.log(ccRecord);
+                //console.log(ccRecord);
               });
         });
 
@@ -225,8 +207,15 @@ export default {
     clearSelected() {
       this.$refs.selectableTable.clearSelected()
     },
-    sliderUpdate(newVal){
+    sliderChange(newVal){
       console.log(newVal.from, newVal.to);
+      dMinutes.filter(function (d) {
+        return d >= newVal.from && d <= newVal.to;
+      });
+      this.refreshMap(dMinutes);
+    },
+    sliderUpdate(newVal){
+      console.log(newVal);
     }
   },
   watch: {
