@@ -66,7 +66,8 @@
             :step="1"
             :min="1"
             :max="1440"
-            @finish="sliderChange"
+            @change="sliderChange"
+            @finish="sliderFinish"
             @start="updateChange"/>
       </b-col>
     </b-row>
@@ -199,8 +200,6 @@ export default {
   methods: {
     refreshMap(cfDimension) {
       this.coordinates = cfDimension.top(Infinity);
-      this.dataForHist = cfDimension.top(Infinity).map(d => d.Minutes);
-      this.forceRerender();
     },
     onRowSelected(items) {
       this.selected = items
@@ -216,12 +215,16 @@ export default {
     },
     sliderChange(newVal){
       console.log(newVal.from, newVal.to);
-      this.min = newVal.from;
-      this.max = newVal.to;
       dMinutes.filter(function (d) {
         return d >= newVal.from && d <= newVal.to;
       });
       this.refreshMap(dMinutes);
+    },
+    sliderFinish(newVal){
+      this.min = newVal.from;
+      this.max = newVal.to;
+      this.dataForHist = this.coordinates.map(d => d.Minutes);
+      this.forceRerender();
     },
     updateChange(newVal){
       console.log(newVal);
