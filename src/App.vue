@@ -1,5 +1,28 @@
 <template>
-  <b-container fluid>
+  <b-container fluid="lg">
+    <b-row>
+      <b-col>
+        <HistogramSlider
+            ref="slider"
+            :key="componentKey"
+            style="margin: 10px auto"
+            :width="1000"
+            :bar-height="100"
+            :data="dataForHist"
+            :drag-interval="true"
+            :force-edges="true"
+            :prettify="prettify"
+            :gridTextColor="'#2c3e50'"
+            :primary-color="'#2c3e50'"
+            :step="1"
+            :min="1"
+            :max="1440"
+            @finish="sliderFinish"
+            @start="sliderStart"/>
+        <!--@change="sliderChange"-->
+      </b-col>
+    </b-row>
+
     <b-row>
       <b-col cols="4">
         <b-row>
@@ -48,27 +71,6 @@
           ></b-form-checkbox-group>
         </b-form-group>
 
-      </b-col>
-    </b-row>
-
-    <b-row>
-      <b-col>
-        <HistogramSlider
-            :key="componentKey"
-            style="margin: 200px auto"
-            :width="1000"
-            :bar-height="100"
-            :data="dataForHist"
-            :drag-interval="true"
-            :force-edges="false"
-            :prettify="prettify"
-            :colors="['#4facfe', '#00f2fe']"
-            :step="1"
-            :min="1"
-            :max="1440"
-            @change="sliderChange"
-            @finish="sliderFinish"
-            @start="updateChange"/>
       </b-col>
     </b-row>
 
@@ -200,6 +202,7 @@ export default {
   methods: {
     refreshMap(cfDimension) {
       this.coordinates = cfDimension.top(Infinity);
+      this.forceRerender();
     },
     onRowSelected(items) {
       this.selected = items
@@ -213,6 +216,7 @@ export default {
     clearSelected() {
       this.$refs.selectableTable.clearSelected()
     },
+    /*
     sliderChange(newVal){
       console.log(newVal.from, newVal.to);
       dMinutes.filter(function (d) {
@@ -220,21 +224,28 @@ export default {
       });
       this.refreshMap(dMinutes);
     },
+     */
     sliderFinish(newVal){
+      console.log(newVal.from, newVal.to);
+      dMinutes.filter(function (d) {
+        return d >= newVal.from && d <= newVal.to;
+      });
+      this.refreshMap(dMinutes);
       this.min = newVal.from;
       this.max = newVal.to;
-      this.dataForHist = this.coordinates.map(d => d.Minutes);
+      //this.dataForHist = this.coordinates.map(d => d.Minutes);
       this.forceRerender();
     },
-    updateChange(newVal){
+    sliderStart(newVal){
       console.log(newVal);
       newVal.from = this.min;
       newVal.to = this.max;
-
     },
     forceRerender(){
       this.componentKey += 1;
-      this.$refs
+      this.$refs.slider.from = this.min;
+      this.$refs.slider.to = this.max;
+      this.dataForHist = this.coordinates.map(d => d.Minutes);
     }
   },
   watch: {
