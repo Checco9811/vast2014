@@ -8,6 +8,7 @@
             style="margin: 10px auto"
             :width="1000"
             :bar-height="100"
+            :transitionDuration="10"
             :data="dataForHist"
             :drag-interval="true"
             :force-edges="true"
