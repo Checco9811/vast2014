@@ -101,7 +101,7 @@
 
       <b-row>
         <b-col>
-          <Chart></Chart>
+          <Chart :cf-aggregation="dataEmploymentType"></Chart>
         </b-col>
         <b-col>
           <Chart></Chart>
@@ -128,6 +128,10 @@ let dID; // dimension for Id
 let dEmplType // dimension for EmploymentType
 let dDate; // dimension for Date
 let dMinutes; // dimension for Minutes passed from 00:00
+
+let cf2;
+let dEmplTypeCc;
+let dDateCc;
 
 export default {
   name: 'App',
@@ -165,7 +169,8 @@ export default {
       employmentType:{
         value: [],
         options: ['Executive', 'Other']
-      }
+      },
+      dataEmploymentType:[]
     };
   },
   mounted(){
@@ -222,8 +227,12 @@ export default {
           d3.csv('cc_data_processed.csv')
               .then((data) => {
                 const ccRecord = data.map((d) => {
+                  const timestamp = new Date(d.timestamp);
+                  const yyyymmdd = timestamp.toISOString().split("T")[0];
+                  const hhmmss = timestamp.toISOString().split("T")[1].split(".")[0];
                   const r = {
-                    Timestamp: +new Date(d.timestamp),
+                    Timestamp: timestamp,
+                    Date: yyyymmdd,
                     id: +d.CarID,
                     lat: +d.lat,
                     long: +d.long,
@@ -235,6 +244,14 @@ export default {
 
                   return r;
                 });
+
+                cf2 = crossfilter(ccRecord);
+                dEmplTypeCc = cf2.dimension(d => d.location);
+                dDateCc = cf2.dimension(d => d.Date);
+
+                console.log(dEmplTypeCc.top(Infinity));
+
+                this.refreshCharts();
 
                 //this.ccRecord = ccRecord;
                 //console.log(ccRecord);
@@ -299,6 +316,10 @@ export default {
       this.$refs.slider.from = this.min;
       this.$refs.slider.to = this.max;
       this.dataForHist = this.coordinates.map(d => d.Minutes);
+    },
+    refreshCharts(){
+      console.log(dEmplTypeCc.group().reduceCount().all());
+      this.dataEmploymentType = dEmplTypeCc.group().reduceCount().all();
     }
   },
   watch: {
@@ -317,6 +338,8 @@ export default {
         var selectedDates = []
         newDate.forEach(d => selectedDates.push(d));
         dDate.filter(d => selectedDates.indexOf(d) > -1);
+        dDateCc.filter(d => selectedDates.indexOf(d) > -1);
+        this.refreshCharts();
         this.refreshMap(dDate);
       },
       deep: true
