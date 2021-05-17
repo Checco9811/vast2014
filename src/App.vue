@@ -76,7 +76,10 @@
     </b-row>
     <b-row>
       <b-col>
-        <div id="vis"></div>
+
+      </b-col>
+      <b-col>
+
       </b-col>
     </b-row>
 
@@ -85,6 +88,7 @@
 </template>
 
 <script>
+
 import Map from '@/components/Map';
 import crossfilter from 'crossfilter';
 import moment from 'moment';
@@ -100,7 +104,7 @@ let dMinutes; // dimension for Minutes passed from 00:00
 export default {
   name: 'App',
   components: {
-    Map,
+    Map
   },
   data () {
     return {
@@ -129,7 +133,6 @@ export default {
         date.setSeconds(ts*60);
         return date.toISOString().substr(11, 5);
       }
-
     };
   },
   mounted(){
@@ -226,7 +229,7 @@ export default {
         y: {field: 'b', type: 'quantitative'}
       }
     };
-    vegaEmbed('#vis', yourVlSpec);
+    //vegaEmbed('#vis', yourVlSpec);
 
   },
   methods: {
