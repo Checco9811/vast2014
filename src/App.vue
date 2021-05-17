@@ -1,88 +1,109 @@
 <template>
-  <b-container fluid="lg">
-    <b-row>
-    </b-row>
+  <div id="app">
+    <b-navbar id="navbar" toggleable="lg" type="dark" variant="info">
+      <b-navbar-brand href="#">VC 2014</b-navbar-brand>
+      <b-navbar-toggle target="nav-collapse"></b-navbar-toggle>
+      <b-collapse id="nav-collapse" is-nav>
+        <b-navbar-nav>
+          <b-nav-item href="#">Mini Challenge 2</b-nav-item>
+        </b-navbar-nav>
+      </b-collapse>
+    </b-navbar>
 
-    <b-row>
-      <b-col cols="4">
-        <b-row>
-          <b-table
-              id="CarIDs"
-              :busy="isBusy"
-              :items="items"
-              :fields="fields"
-              :select-mode="selectMode"
-              responsive="sm"
-              ref="selectableTable"
-              selectable sticky-header="300px"
-              @row-selected="onRowSelected">
+    <b-container fluid="lg">
 
-            <template #table-busy>
-              <div class="text-center text-danger my-2">
-                <b-spinner label="Loading..." class="align-middle"></b-spinner>
-                <strong>Loading...</strong>
-              </div>
-            </template>
-          </b-table>
+      <b-row>
+        <b-col>
 
-          <b-button size="sm" @click="selectAllRows">Select all</b-button>
-          <b-button size="sm" @click="clearSelected">Clear selected</b-button>
+        </b-col>
+        <b-col>
 
-        </b-row>
-      </b-col>
+        </b-col>
+      </b-row>
 
-      <b-col>
-        <Map :coordinates="coordinates" :ccRecord="ccRecord"></Map>
-      </b-col>
+      <b-row>
+        <b-col cols="4">
+          <b-row>
+            <b-table
+                id="CarIDs"
+                :busy="isBusy"
+                :items="items"
+                :fields="fields"
+                :select-mode="selectMode"
+                responsive="sm"
+                ref="selectableTable"
+                selectable sticky-header="300px"
+                @row-selected="onRowSelected">
 
-      <b-col cols="2">
-        <b-form-group
-            label="Select Dates">
-          <b-form-checkbox-group
-              v-model="selectedDate"
-              :options="dateOptions"
-              name="dateSelector"
-              stacked
-          ></b-form-checkbox-group>
-        </b-form-group>
-      </b-col>
+              <template #table-busy>
+                <div class="text-center text-danger my-2">
+                  <b-spinner label="Loading..." class="align-middle"></b-spinner>
+                  <strong>Loading...</strong>
+                </div>
+              </template>
+            </b-table>
 
-    </b-row>
-    <b-row>
-      <b-col>
-        <HistogramSlider
-            ref="slider"
-            :key="componentKey"
-            style="margin: 10px auto"
-            :width="1000"
-            :bar-height="100"
-            :transitionDuration="10"
-            :data="dataForHist"
-            :drag-interval="true"
-            :force-edges="true"
-            :prettify="prettify"
-            :gridTextColor="'#1f77b4'"
-            :primary-color="'#1f77b4'"
-            :step="1"
-            :min="1"
-            :max="1440"
-            @finish="sliderFinish"
-            @start="sliderStart"/>
-        <!--@change="sliderChange"-->
-      </b-col>
-    </b-row>
+            <b-col>
+              <b-button size="sm" @click="selectAllRows">Select all</b-button>
+              <b-button size="sm" @click="clearSelected">Clear selected</b-button>
+            </b-col>
 
-    <b-row>
-      <b-col>
-        <Chart></Chart>
-      </b-col>
-      <b-col>
-        <Chart></Chart>
-      </b-col>
-    </b-row>
+          </b-row>
+        </b-col>
 
-  </b-container>
+        <b-col>
+          <Map :coordinates="coordinates" :ccRecord="ccRecord"></Map>
+        </b-col>
 
+        <b-col cols="2">
+          <b-form-group
+              label="Select Dates">
+            <b-form-checkbox-group
+                v-model="selectedDate"
+                :options="dateOptions"
+                name="dateSelector"
+                stacked
+            ></b-form-checkbox-group>
+          </b-form-group>
+        </b-col>
+
+      </b-row>
+      <b-row>
+        <b-col>
+          <HistogramSlider
+              ref="slider"
+              :key="componentKey"
+              style="margin: 10px auto"
+              :width="1000"
+              :bar-height="100"
+              :transitionDuration="10"
+              :data="dataForHist"
+              :drag-interval="true"
+              :force-edges="true"
+              :prettify="prettify"
+              :gridTextColor="'#1f77b4'"
+              :primary-color="'#1f77b4'"
+              :step="1"
+              :min="1"
+              :max="1440"
+              @finish="sliderFinish"
+              @start="sliderStart"/>
+          <!--@change="sliderChange"-->
+        </b-col>
+      </b-row>
+
+      <b-row>
+        <b-col>
+          <Chart></Chart>
+        </b-col>
+        <b-col>
+          <Chart></Chart>
+        </b-col>
+      </b-row>
+
+    </b-container>
+
+  </div>
 </template>
 
 <script>
@@ -309,9 +330,11 @@ export default {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+}
+
+#navbar{
+  background-color: #1f77b4!important;
 }
 
 b-table{
