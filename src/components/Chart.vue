@@ -10,11 +10,41 @@ export default {
   components:{
     VuePlotly
   },
+  props:{
+    cfAggregation:{
+      type: Array
+    }
+  },
   data(){
     return {
-      data: [{x: [1, 3], y: [2, 4]}],
-      layout: {},
-      options: {}
+      data: [{
+        type: 'bar',
+        x: [1, 3],
+        y: [2, 4],
+        orientation: 'v',
+      }],
+      layout: {
+        height: 200,
+        margin: {
+          t: 10,
+          l: 70,
+          b: 30,
+          r: 10,
+          pad: 5,
+        },
+        xaxis: {
+          type: 'category',
+        },
+      },
+      options: {
+        displayModeBar: false,
+      },
+    };
+  },
+  watch:{
+    cfAggregation(datum){
+      this.data[0].y = datum.map(d => d.key);
+      this.data[0].x = datum.map(d => d.value);
     }
   }
 }

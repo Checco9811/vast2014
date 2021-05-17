@@ -1,27 +1,6 @@
 <template>
   <b-container fluid="lg">
     <b-row>
-      <b-col>
-        <HistogramSlider
-            ref="slider"
-            :key="componentKey"
-            style="margin: 10px auto"
-            :width="1000"
-            :bar-height="100"
-            :transitionDuration="10"
-            :data="dataForHist"
-            :drag-interval="true"
-            :force-edges="true"
-            :prettify="prettify"
-            :gridTextColor="'#2c3e50'"
-            :primary-color="'#2c3e50'"
-            :step="1"
-            :min="1"
-            :max="1440"
-            @finish="sliderFinish"
-            @start="sliderStart"/>
-        <!--@change="sliderChange"-->
-      </b-col>
     </b-row>
 
     <b-row>
@@ -50,11 +29,6 @@
           <b-button size="sm" @click="clearSelected">Clear selected</b-button>
 
         </b-row>
-        <b-row>
-          <b-col>
-
-          </b-col>
-        </b-row>
       </b-col>
 
       <b-col>
@@ -71,15 +45,39 @@
               stacked
           ></b-form-checkbox-group>
         </b-form-group>
-
       </b-col>
+
     </b-row>
     <b-row>
       <b-col>
+        <HistogramSlider
+            ref="slider"
+            :key="componentKey"
+            style="margin: 10px auto"
+            :width="1000"
+            :bar-height="100"
+            :transitionDuration="10"
+            :data="dataForHist"
+            :drag-interval="true"
+            :force-edges="true"
+            :prettify="prettify"
+            :gridTextColor="'#1f77b4'"
+            :primary-color="'#1f77b4'"
+            :step="1"
+            :min="1"
+            :max="1440"
+            @finish="sliderFinish"
+            @start="sliderStart"/>
+        <!--@change="sliderChange"-->
+      </b-col>
+    </b-row>
 
+    <b-row>
+      <b-col>
+        <Chart></Chart>
       </b-col>
       <b-col>
-
+        <Chart></Chart>
       </b-col>
     </b-row>
 
@@ -90,6 +88,7 @@
 <script>
 
 import Map from '@/components/Map';
+import Chart from "@/components/Chart";
 import crossfilter from 'crossfilter';
 import moment from 'moment';
 
@@ -104,6 +103,7 @@ let dMinutes; // dimension for Minutes passed from 00:00
 export default {
   name: 'App',
   components: {
+    Chart,
     Map
   },
   data () {
