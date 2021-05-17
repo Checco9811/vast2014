@@ -14,7 +14,14 @@
 
       <b-row>
         <b-col>
-
+          <b-form-group label="Select Employment Type">
+            <b-form-checkbox-group
+                v-model="employmentType.value"
+                :options="employmentType.options"
+                name="buttonsEmploymentType"
+                buttons
+            ></b-form-checkbox-group>
+          </b-form-group>
         </b-col>
         <b-col>
 
@@ -118,6 +125,7 @@ const d3 = require('d3');
 // crossfilter data management
 let cf; // crossfilter instance
 let dID; // dimension for Id
+let dEmplType // dimension for EmploymentType
 let dDate; // dimension for Date
 let dMinutes; // dimension for Minutes passed from 00:00
 
@@ -142,17 +150,21 @@ export default {
         {key:'FirstName', sortable: true},
         {key:'LastName', sortable: true},
         {key:'CurrentEmploymentType', sortable: true},
-        {key: 'CurrentEmploymentTitle', sortable: true}
+        {key:'CurrentEmploymentTitle', sortable: true}
       ],
       selectMode: 'multi',
       isBusy: true,
-      componentKey: 0,
+      componentKey: 0, // key for the histogram slider component to force the reactivity
       min: 1,
       max: 1440,
       prettify: function(ts) {
         var date = new Date(0);
         date.setSeconds(ts*60);
         return date.toISOString().substr(11, 5);
+      },
+      employmentType:{
+        value: [],
+        options: ['Executive', 'Other']
       }
     };
   },
@@ -178,15 +190,16 @@ export default {
             return r;
           });
 
-          //console.log(gpsRecord);
-
           cf = crossfilter(gpsRecord);
           dID = cf.dimension(d => d.id);
+          dEmplType = cf.dimension(d => d.CurrentEmploymentType);
           dDate = cf.dimension(d => d.Date);
           dMinutes = cf.dimension(d => d.Minutes);
 
           //finding unique values for the options
           this.dateOptions = dDate.group().reduceCount().all().map(v => v.key);
+          this.employmentType.options = dEmplType.group().reduceCount().all().map(v => v.key);
+
           const uniqueStrings = new Set(gpsRecord.map(d => { //slice to consider less record?
             return {
               CarID: d.id,
@@ -204,7 +217,7 @@ export default {
           this.selected = [];
           this.selectedDate = [];
 
-          this.refreshMap(dID.filter(null));
+          this.refreshMap(dID);
 
           d3.csv('cc_data_processed.csv')
               .then((data) => {
@@ -228,30 +241,6 @@ export default {
               });
         });
 
-    var yourVlSpec = {
-      $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
-      description: 'A simple bar chart with embedded data.',
-      data: {
-        values: [
-          {a: 'A', b: 28},
-          {a: 'B', b: 55},
-          {a: 'C', b: 43},
-          {a: 'D', b: 91},
-          {a: 'E', b: 81},
-          {a: 'F', b: 53},
-          {a: 'G', b: 19},
-          {a: 'H', b: 87},
-          {a: 'I', b: 52}
-        ]
-      },
-      mark: 'bar',
-      encoding: {
-        x: {field: 'a', type: 'ordinal'},
-        y: {field: 'b', type: 'quantitative'}
-      }
-    };
-    //vegaEmbed('#vis', yourVlSpec);
-
   },
   methods: {
     refreshMap(cfDimension) {
@@ -270,6 +259,18 @@ export default {
     clearSelected() {
       this.$refs.selectableTable.clearSelected()
     },
+    updateTable(){
+      var table = this.$refs.selectableTable;
+
+      var i=0;
+      table.items.forEach( d => {
+        if(this.employmentType.value.includes(d.CurrentEmploymentType))
+          table.selectRow(i);
+        else
+          table.unselectRow(i);
+        i++;
+      })
+    },
     /*
     sliderChange(newVal){
       console.log(newVal.from, newVal.to);
@@ -287,11 +288,9 @@ export default {
       this.refreshMap(dMinutes);
       this.min = newVal.from;
       this.max = newVal.to;
-      //this.dataForHist = this.coordinates.map(d => d.Minutes);
       this.forceRerender();
     },
     sliderStart(newVal){
-      console.log(newVal);
       newVal.from = this.min;
       newVal.to = this.max;
     },
@@ -307,10 +306,11 @@ export default {
       handler(newVal){
         var selectedIDs = []
         newVal.forEach(d => selectedIDs.push(d.CarID));
+        dEmplType.filter(null); // to allow complex complex condition like "All the Employer of type 'Executive' + CarID 1"
         dID.filter(d => selectedIDs.indexOf(d) > -1);
         this.refreshMap(dID);
       },
-      deep:true
+      deep:true // force watching within properties
     },
     selectedDate: {
       handler(newDate){
@@ -321,6 +321,23 @@ export default {
       },
       deep: true
     },
+    employmentType: {
+      handler(newVal){
+        console.log(newVal.value.length);
+        if(newVal.value.length != 0) {
+          var selectedTypes = []
+          newVal.value.forEach(d => selectedTypes.push(d));
+          dEmplType.filter(d => selectedTypes.indexOf(d) > -1);
+          this.refreshMap(dEmplType);
+        }else{
+          dEmplType.filter(null);
+        }
+
+        this.updateTable(); // Select the CarIDs in the table according to the EmploymentTypes
+      },
+      deep:true
+    },
+
   }
 }
 </script>
@@ -341,6 +358,5 @@ b-table{
   height: 500px;
   overflow-y: auto;
 }
-
 
 </style>
