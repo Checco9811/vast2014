@@ -77,7 +77,8 @@
       </b-row>
       <b-row>
         <b-col>
-
+          <div id='hist'>
+          </div>
         </b-col>
       </b-row>
 
@@ -101,8 +102,15 @@ import Map from '@/components/Map';
 import Chart from "@/components/Chart";
 import crossfilter from 'crossfilter';
 import moment from 'moment';
+import histogram from "@/assets/js/histogramSlider";
 
 const d3 = require('d3');
+
+// histomgram slider
+const histogramSlider = histogram()
+    .onBrushed(function (selected) {
+        console.log(selected);
+    });
 
 // crossfilter data management
 let cf; // crossfilter instance
@@ -233,6 +241,7 @@ export default {
                 console.log(dEmplTypeCc.top(Infinity));
 
                 this.refreshCharts();
+                this.refreshHistogramSlider(gpsRecord.map(d => {return d.Minutes}));
 
                 //this.ccRecord = ccRecord;
                 //console.log(ccRecord);
@@ -243,7 +252,6 @@ export default {
   methods: {
     refreshMap(cfDimension) {
       this.coordinates = cfDimension.top(Infinity);
-      this.forceRerender();
     },
     onRowSelected(items) {
       this.selected = items
@@ -281,6 +289,11 @@ export default {
     refreshCharts(){
       console.log(dEmplTypeCc.group().reduceCount().all());
       this.dataEmploymentType = dEmplTypeCc.group().reduceCount().all();
+    },
+    refreshHistogramSlider(data){
+      d3.select('#hist')
+          .datum(data)
+          .call(histogramSlider);
     }
   },
   watch: {

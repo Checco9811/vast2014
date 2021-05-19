@@ -1,11 +1,6 @@
 const d3 = require('d3');
 
 export default function histogram() {
-    /*
-    var margin = { top: 30, right: 30, bottom: 30, left: 50 },
-    width = 460 - margin.left - margin.right,
-    height = 400 - margin.top - margin.bottom;
-    */
     var margin = { top: 30, right: 30, bottom: 30, left: 50 };
     var width = 1000;
     var height = 100;
