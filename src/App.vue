@@ -132,7 +132,6 @@ export default {
   data () {
     return {
       coordinates: [],
-      dataForHist: [],
       items: [],
       selected: [],
       selectedDate: [],
@@ -241,7 +240,9 @@ export default {
                 console.log(dEmplTypeCc.top(Infinity));
 
                 this.refreshCharts();
-                this.refreshHistogramSlider(gpsRecord.map(d => {return d.Minutes}));
+
+                histogramSlider.data();
+                d3.select('#hist').call(histogramSlider);
 
                 //this.ccRecord = ccRecord;
                 //console.log(ccRecord);
@@ -277,23 +278,9 @@ export default {
         i++;
       })
     },
-    /*
-    sliderChange(newVal){
-      console.log(newVal.from, newVal.to);
-      dMinutes.filter(function (d) {
-        return d >= newVal.from && d <= newVal.to;
-      });
-      this.refreshMap(dMinutes);
-    },
-     */
     refreshCharts(){
-      console.log(dEmplTypeCc.group().reduceCount().all());
       this.dataEmploymentType = dEmplTypeCc.group().reduceCount().all();
-    },
-    refreshHistogramSlider(data){
-      d3.select('#hist')
-          .datum(data)
-          .call(histogramSlider);
+      histogramSlider.data(this.coordinates.map(d => {return d.Minutes}));
     }
   },
   watch: {
@@ -303,6 +290,7 @@ export default {
         newVal.forEach(d => selectedIDs.push(d.CarID));
         dEmplType.filter(null); // to allow complex complex condition like "All the Employer of type 'Executive' + CarID 1"
         dID.filter(d => selectedIDs.indexOf(d) > -1);
+        this.refreshCharts();
         this.refreshMap(dID);
       },
       deep:true // force watching within properties
@@ -325,6 +313,7 @@ export default {
           var selectedTypes = []
           newVal.value.forEach(d => selectedTypes.push(d));
           dEmplType.filter(d => selectedTypes.indexOf(d) > -1);
+          this.refreshCharts();
           this.refreshMap(dEmplType);
         }else{
           dEmplType.filter(null);
