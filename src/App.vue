@@ -77,25 +77,7 @@
       </b-row>
       <b-row>
         <b-col>
-          <HistogramSlider
-              ref="slider"
-              :key="componentKey"
-              style="margin: 10px auto"
-              :width="1000"
-              :bar-height="100"
-              :transitionDuration="10"
-              :data="dataForHist"
-              :drag-interval="true"
-              :force-edges="true"
-              :prettify="prettify"
-              :gridTextColor="'#1f77b4'"
-              :primary-color="'#1f77b4'"
-              :step="1"
-              :min="1"
-              :max="1440"
-              @finish="sliderFinish"
-              @start="sliderStart"/>
-          <!--@change="sliderChange"-->
+
         </b-col>
       </b-row>
 
@@ -158,7 +140,6 @@ export default {
       ],
       selectMode: 'multi',
       isBusy: true,
-      componentKey: 0, // key for the histogram slider component to force the reactivity
       min: 1,
       max: 1440,
       prettify: function(ts) {
@@ -297,26 +278,6 @@ export default {
       this.refreshMap(dMinutes);
     },
      */
-    sliderFinish(newVal){
-      console.log(newVal.from, newVal.to);
-      dMinutes.filter(function (d) {
-        return d >= newVal.from && d <= newVal.to;
-      });
-      this.refreshMap(dMinutes);
-      this.min = newVal.from;
-      this.max = newVal.to;
-      this.forceRerender();
-    },
-    sliderStart(newVal){
-      newVal.from = this.min;
-      newVal.to = this.max;
-    },
-    forceRerender(){
-      this.componentKey += 1;
-      this.$refs.slider.from = this.min;
-      this.$refs.slider.to = this.max;
-      this.dataForHist = this.coordinates.map(d => d.Minutes);
-    },
     refreshCharts(){
       console.log(dEmplTypeCc.group().reduceCount().all());
       this.dataEmploymentType = dEmplTypeCc.group().reduceCount().all();
