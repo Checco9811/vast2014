@@ -1,6 +1,8 @@
 const d3 = require('d3');
 
 export default function histogram() {
+    const dispatch = d3.dispatch('range');
+
     var data = [1,1440];
     var margin = { top: 30, right: 30, bottom: 30, left: 50 };
     var width = 1000;
@@ -32,7 +34,8 @@ export default function histogram() {
     function brushed({selection}) {
         if (selection != null) {
             const selectedTime = selection.map(d => x.invert(d));
-            onBrushed(selectedTime);
+            //onBrushed(selectedTime);
+            dispatch.call('range', this, selectedTime);
         }
     }
 
@@ -162,7 +165,7 @@ export default function histogram() {
         return chart;
     };
 
-    //Accessors//
+
     chart.width = function(_) {
         if (!arguments.length) return width;
         width = _;
@@ -178,6 +181,12 @@ export default function histogram() {
     chart.onBrushed = function(_) {
         if (!arguments.length) return onBrushed;
         onBrushed = _;
+        return chart;
+    };
+
+    chart.on = (eventType, handler) => {
+        dispatch.on(eventType, handler);
+
         return chart;
     };
 

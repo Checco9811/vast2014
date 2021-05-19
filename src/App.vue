@@ -107,10 +107,7 @@ import histogram from "@/assets/js/histogramSlider";
 const d3 = require('d3');
 
 // histomgram slider
-const histogramSlider = histogram()
-    .onBrushed(function (selected) {
-        console.log(selected);
-    });
+const histogramSlider = histogram();
 
 // crossfilter data management
 let cf; // crossfilter instance
@@ -207,11 +204,6 @@ export default {
 
           this.toggleBusy();
 
-          this.selected = [];
-          this.selectedDate = [];
-
-          this.refreshMap(dID);
-
           d3.csv('cc_data_processed.csv')
               .then((data) => {
                 const ccRecord = data.map((d) => {
@@ -234,18 +226,29 @@ export default {
                 });
 
                 cf2 = crossfilter(ccRecord);
-                dEmplTypeCc = cf2.dimension(d => d.location);
+                dEmplTypeCc = cf2.dimension(d => d.location); // ************************+
                 dDateCc = cf2.dimension(d => d.Date);
 
-                console.log(dEmplTypeCc.top(Infinity));
+                this.selected = [];
+                this.selectedDate = [];
 
                 this.refreshCharts();
+                this.refreshMap(dID);
 
                 histogramSlider.data();
-                d3.select('#hist').call(histogramSlider);
+                d3.select('#hist')
+                    .call(histogramSlider);
 
+                histogramSlider.on('range', (range) =>{
+                  console.log(range);
+                  dMinutes.filter(function (d) {
+                    return d >= range[0] && d <= range[1];
+                  });
+
+                  //this.refreshCharts(); //to change******
+                  this.refreshMap(dMinutes);
+                })
                 //this.ccRecord = ccRecord;
-                //console.log(ccRecord);
               });
         });
 
@@ -280,7 +283,7 @@ export default {
     },
     refreshCharts(){
       this.dataEmploymentType = dEmplTypeCc.group().reduceCount().all();
-      histogramSlider.data(this.coordinates.map(d => {return d.Minutes}));
+      histogramSlider.data(dID.top(Infinity).map(d => {return d.Minutes}));
     }
   },
   watch: {
@@ -322,7 +325,7 @@ export default {
         this.updateTable(); // Select the CarIDs in the table according to the EmploymentTypes
       },
       deep:true
-    },
+    }
 
   }
 }
