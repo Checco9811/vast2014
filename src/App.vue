@@ -34,9 +34,9 @@
             <b-table
                 id="CarIDs"
                 :busy="isBusy"
-                :items="items"
+                :items="employees.options"
                 :fields="fields"
-                :select-mode="selectMode"
+                :select-mode="'multi'"
                 responsive="sm"
                 ref="selectableTable"
                 selectable sticky-header="300px"
@@ -66,8 +66,8 @@
           <b-form-group
               label="Select Dates">
             <b-form-checkbox-group
-                v-model="selectedDate"
-                :options="dateOptions"
+                v-model="dates.value"
+                :options="dates.options"
                 name="dateSelector"
                 stacked
             ></b-form-checkbox-group>
@@ -106,7 +106,7 @@ import histogram from "@/assets/js/histogramSlider";
 
 const d3 = require('d3');
 
-// histomgram slider
+// histogram slider
 const histogramSlider = histogram();
 
 // crossfilter data management
@@ -129,12 +129,14 @@ export default {
   data () {
     return {
       coordinates: [],
-      sliderData: [],
-      items: [],
-      selected: [],
-      selectedDate: [],
-      dateOptions: [],
-      dotOptions:[{disabled:false}, {disabled: false}],
+      employees: {
+        value: [],
+        options: []
+      },
+      dates: {
+        value: [],
+        options: []
+      },
       ccRecord: [],
       fields: [
         {key:'CarID', sortable: true},
@@ -143,7 +145,6 @@ export default {
         {key:'CurrentEmploymentType', sortable: true},
         {key:'CurrentEmploymentTitle', sortable: true}
       ],
-      selectMode: 'multi',
       isBusy: true,
       range: {
         min: 1,
@@ -198,7 +199,7 @@ export default {
           dMinutes = cf.dimension(d => d.Minutes);
 
           //finding unique values for the options
-          this.dateOptions = dDate.group().reduceCount().all().map(v => v.key);
+          this.dates.options = dDate.group().reduceCount().all().map(v => v.key);
           this.employmentType.options = dEmplType.group().reduceCount().all().map(v => v.key);
 
           const uniqueStrings = new Set(gpsRecord.map(d => { //slice to consider less record?
@@ -211,7 +212,7 @@ export default {
             }
           }).map(JSON.stringify));
           const uniqueStringsArray = Array.from(uniqueStrings);
-          this.items = uniqueStringsArray.map(JSON.parse);
+          this.employees.options = uniqueStringsArray.map(JSON.parse);
 
           this.toggleBusy();
 
@@ -240,8 +241,8 @@ export default {
                 dEmplTypeCc = cf2.dimension(d => d.location); // ************************+
                 dDateCc = cf2.dimension(d => d.Date);
 
-                this.selected = [];
-                this.selectedDate = [];
+                this.employees.value = [];
+                this.dates.value = [];
 
                 this.refreshCharts();
                 this.refreshMap(dID);
@@ -256,7 +257,7 @@ export default {
       this.coordinates = cfDimension.top(Infinity);
     },
     onRowSelected(items) {
-      this.selected = items
+      this.employees.value = items
     },
     toggleBusy() {
       this.isBusy = !this.isBusy
@@ -288,24 +289,26 @@ export default {
     }
   },
   watch: {
-    selected: {
+    employees: {
       handler(newVal){
         var selectedIDs = []
-        newVal.forEach(d => selectedIDs.push(d.CarID));
+        newVal.value.forEach(d => selectedIDs.push(d.CarID));
         dEmplType.filter(null); // to allow complex complex condition like "All the Employer of type 'Executive' + CarID 1"
         dID.filter(d => selectedIDs.indexOf(d) > -1);
+
         this.refreshCharts();
         this.refreshMap(dID);
         this.refreshHistogramSlider();
       },
       deep:true // force watching within properties
     },
-    selectedDate: {
+    dates: {
       handler(newDate){
         var selectedDates = []
-        newDate.forEach(d => selectedDates.push(d));
+        newDate.value.forEach(d => selectedDates.push(d));
         dDate.filter(d => selectedDates.indexOf(d) > -1);
         dDateCc.filter(d => selectedDates.indexOf(d) > -1);
+
         this.refreshCharts();
         this.refreshMap(dDate);
         this.refreshHistogramSlider();
@@ -319,6 +322,7 @@ export default {
           var selectedTypes = []
           newVal.value.forEach(d => selectedTypes.push(d));
           dEmplType.filter(d => selectedTypes.indexOf(d) > -1);
+
           this.refreshCharts();
           this.refreshMap(dEmplType);
           this.refreshHistogramSlider();

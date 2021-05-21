@@ -3,43 +3,28 @@ const d3 = require('d3');
 export default function histogram() {
     const dispatch = d3.dispatch('range');
 
-    var data = [1,1440];
-    var margin = { top: 30, right: 30, bottom: 30, left: 50 };
-    var width = 1000;
-    var height = 100;
-    var fillColor = 'steelblue';
-    var xAxis;
-    var yAxis;
+    var data = [1,1440] // data for the histogram
+        ,margin = { top: 30, right: 30, bottom: 30, left: 50 }
+        ,width = 1000
+        ,height = 100
+        ,fillColor = 'steelblue'
+        ,xAxis
+        ,yAxis
+        ,min = d3.min(data)
+        ,max = d3.max(data)
+        ,domain = [min,max]
+        ,x
+        ,y
+        ,Nbin = 24 // The number of bins
+        ,svg
+        ,bar
+        ,updateData;
 
     const brush = d3.brushX()
         .extent([[0, 0], [width, height]])
         .on("end", brushed);
 
-    var min = d3.min(data);
-    var max = d3.max(data);
-    var domain = [min,max];
-    var x;
-    var y;
-
-    var onBrushed = function (){};
-
-    // The number of bins
-    var Nbin = 24;
-
-    var svg;
-    var bar;
-
-    var updateData;
-
-    function brushed({selection}) {
-        if (selection != null) {
-            const selectedTime = selection.map(d => x.invert(d));
-            //onBrushed(selectedTime);
-            dispatch.call('range', this, selectedTime);
-        }
-    }
-
-    var formatMinutes = function(d) {
+    const formatMinutes = function(d) {
         var hours = Math.floor(d / 60),
             minutes = Math.floor(d - hours*60),
             output = '';
@@ -47,10 +32,20 @@ export default function histogram() {
             output = minutes + 'm ';
         }
         if (hours) {
-            output = hours + 'h ' + output;
+            if(hours <= 12)
+                output = hours + output + ' AM';
+            else
+                output = hours - 12 + output + ' PM';
         }
         return output;
     };
+
+    function brushed({selection}) {
+        if (selection != null) {
+            const selectedTime = selection.map(d => x.invert(d));
+            dispatch.call('range', this, selectedTime);
+        }
+    }
 
     function chart(selection){
 
@@ -62,10 +57,9 @@ export default function histogram() {
 
             var histogram = d3
                 .histogram()
-                .domain(x.domain()) // then the domain of the graphic
-                .thresholds(x.ticks(Nbin)); // then the numbers of bins
+                .domain(x.domain())
+                .thresholds(x.ticks(Nbin));
 
-            // And apply this function to data to get the bins
             var bins = histogram(data);
 
             y = d3.scaleLinear()
@@ -76,7 +70,6 @@ export default function histogram() {
 
             yAxis = d3.axisLeft(y);
 
-            // Add the svg element to the body and set the dimensions and margins of the graph
             svg = d3
                 .select(this)
                 .append("svg")
@@ -122,10 +115,9 @@ export default function histogram() {
             updateData = function() {
                 var newHistogram = d3
                     .histogram()
-                    .domain(x.domain()) // then the domain of the graphic
-                    .thresholds(x.ticks(Nbin));// then the numbers of bins
+                    .domain(x.domain())
+                    .thresholds(x.ticks(Nbin));
 
-                // And apply this function to data to get the bins
                 var bins = newHistogram(data);
 
                 y = d3.scaleLinear()
@@ -152,7 +144,6 @@ export default function histogram() {
                         return height - y(d.length);
                     })
                     .style("fill", fillColor);
-
             }
 
         });
@@ -176,12 +167,6 @@ export default function histogram() {
     chart.height = function(_) {
         if (!arguments.length) return height;
         height = _;
-        return chart;
-    };
-
-    chart.onBrushed = function(_) {
-        if (!arguments.length) return onBrushed;
-        onBrushed = _;
         return chart;
     };
 
