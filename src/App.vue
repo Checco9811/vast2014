@@ -162,6 +162,14 @@ export default {
     };
   },
   mounted(){
+    // init histogram slider
+    d3.select('#hist')
+        .call(histogramSlider);
+
+    histogramSlider.on('range', (range) =>{
+      this.range = {min: range[0], max: range[1]}
+    })
+
     d3.csv('gps-joined.csv')
         .then((data) => {
           const gpsRecord = data.map((d) => {
@@ -238,14 +246,6 @@ export default {
                 this.refreshCharts();
                 this.refreshMap(dID);
 
-                histogramSlider.data();
-                d3.select('#hist')
-                    .call(histogramSlider);
-
-                histogramSlider.on('range', (range) =>{
-                  this.range = {min: range[0], max: range[1]}
-                })
-
                 //this.ccRecord = ccRecord;
               });
         });
@@ -283,6 +283,8 @@ export default {
       this.dataEmploymentType = dEmplTypeCc.group().reduceCount().all();
     },
     refreshHistogramSlider(){
+      // ignoring the dMinutes dimension for the histogram slider
+      histogramSlider.data(cf.allFiltered([dMinutes]).map(d => d.Minutes));
     }
   },
   watch: {

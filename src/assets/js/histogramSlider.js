@@ -13,7 +13,7 @@ export default function histogram() {
 
     const brush = d3.brushX()
         .extent([[0, 0], [width, height]])
-        .on("start brush end", brushed);
+        .on("end", brushed);
 
     var min = d3.min(data);
     var max = d3.max(data);
@@ -135,6 +135,7 @@ export default function histogram() {
                     ]);
 
                 yAxis = d3.axisLeft(y);
+
                 d3.select('g.y-axis ').call(yAxis);
 
                 bar.data(bins)
