@@ -100,7 +100,7 @@
 
 import Map from '@/components/Map';
 import Chart from "@/components/Chart";
-import crossfilter from 'crossfilter';
+import crossfilter from 'crossfilter2';
 import moment from 'moment';
 import histogram from "@/assets/js/histogramSlider";
 
@@ -129,6 +129,7 @@ export default {
   data () {
     return {
       coordinates: [],
+      sliderData: [],
       items: [],
       selected: [],
       selectedDate: [],
@@ -144,8 +145,10 @@ export default {
       ],
       selectMode: 'multi',
       isBusy: true,
-      min: 1,
-      max: 1440,
+      range: {
+        min: 1,
+        max: 1440,
+      },
       prettify: function(ts) {
         var date = new Date(0);
         date.setSeconds(ts*60);
@@ -240,14 +243,9 @@ export default {
                     .call(histogramSlider);
 
                 histogramSlider.on('range', (range) =>{
-                  console.log(range);
-                  dMinutes.filter(function (d) {
-                    return d >= range[0] && d <= range[1];
-                  });
-
-                  //this.refreshCharts(); //to change******
-                  this.refreshMap(dMinutes);
+                  this.range = {min: range[0], max: range[1]}
                 })
+
                 //this.ccRecord = ccRecord;
               });
         });
@@ -283,7 +281,8 @@ export default {
     },
     refreshCharts(){
       this.dataEmploymentType = dEmplTypeCc.group().reduceCount().all();
-      histogramSlider.data(dID.top(Infinity).map(d => {return d.Minutes}));
+    },
+    refreshHistogramSlider(){
     }
   },
   watch: {
@@ -295,6 +294,7 @@ export default {
         dID.filter(d => selectedIDs.indexOf(d) > -1);
         this.refreshCharts();
         this.refreshMap(dID);
+        this.refreshHistogramSlider();
       },
       deep:true // force watching within properties
     },
@@ -306,6 +306,7 @@ export default {
         dDateCc.filter(d => selectedDates.indexOf(d) > -1);
         this.refreshCharts();
         this.refreshMap(dDate);
+        this.refreshHistogramSlider();
       },
       deep: true
     },
@@ -318,6 +319,7 @@ export default {
           dEmplType.filter(d => selectedTypes.indexOf(d) > -1);
           this.refreshCharts();
           this.refreshMap(dEmplType);
+          this.refreshHistogramSlider();
         }else{
           dEmplType.filter(null);
         }
@@ -325,6 +327,16 @@ export default {
         this.updateTable(); // Select the CarIDs in the table according to the EmploymentTypes
       },
       deep:true
+    },
+    range: {
+      handler(newRange){
+        dMinutes.filter(function (d) {
+          return d >= newRange.min && d <= newRange.max;
+        });
+
+        this.refreshCharts();
+        this.refreshMap(dMinutes);
+      }
     }
 
   }
