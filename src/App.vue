@@ -135,7 +135,7 @@ export default {
       },
       dates: {
         value: [],
-        options: []
+        options: [{text: "Date", value: "2014-01-06"}]
       },
       ccRecord: [],
       fields: [
@@ -199,8 +199,13 @@ export default {
           dMinutes = cf.dimension(d => d.Minutes);
 
           //finding unique values for the options
-          this.dates.options = dDate.group().reduceCount().all().map(v => v.key);
           this.employmentType.options = dEmplType.group().reduceCount().all().map(v => v.key);
+          this.dates.options = dDate.group().reduceCount().all().map(v => v.key).map(d => {
+            return {
+              text: new Date(d).toDateString(), // pretty print date
+              value: d
+            }
+          });
 
           const uniqueStrings = new Set(gpsRecord.map(d => { //slice to consider less record?
             return {
