@@ -120,6 +120,7 @@ let dMinutes; // dimension for Minutes passed from 00:00
 let cf2;
 let dEmplTypeCc;
 let dDateCc;
+let dMinutesCc;
 
 export default {
   name: 'App',
@@ -231,6 +232,7 @@ export default {
                   const r = {
                     Timestamp: timestamp,
                     Date: yyyymmdd,
+                    Minutes: moment.duration(hhmmss).asMinutes(),
                     id: +d.CarID,
                     lat: +d.lat,
                     long: +d.long,
@@ -258,6 +260,7 @@ export default {
                     return {
                       Timestamp: cc.Timestamp,
                       Date: cc.Date,
+                      Minutes: cc.Minutes,
                       CarID: car.CarID,
                       FirstName: car.FirstName,
                       LastName: car.LastName,
@@ -273,6 +276,7 @@ export default {
                   cf2 = crossfilter(ccRecordJoined);
                   dEmplTypeCc = cf2.dimension(d => d.CurrentEmploymentType);
                   dDateCc = cf2.dimension(d => d.Date);
+                  dMinutesCc = cf2.dimension(d => d.Minutes);
 
                   this.employees.value = [];
                   this.dates.value = [];
@@ -371,6 +375,10 @@ export default {
     range: {
       handler(newRange){
         dMinutes.filter(function (d) {
+          return d >= newRange.min && d <= newRange.max;
+        });
+
+        dMinutesCc.filter(function (d) {
           return d >= newRange.min && d <= newRange.max;
         });
 
