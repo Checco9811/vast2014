@@ -1,4 +1,4 @@
-function join(lookupTable, mainTable, lookupKey, mainKey, select) {
+exports.join = (lookupTable, mainTable, lookupKey, mainKey, select) => {
     var l = lookupTable.length,
         m = mainTable.length,
         lookupIndex = [],
@@ -13,4 +13,4 @@ function join(lookupTable, mainTable, lookupKey, mainKey, select) {
         output.push(select(y, x)); // select only the columns you need
     }
     return output;
-};
+}

@@ -104,6 +104,7 @@ import crossfilter from 'crossfilter2';
 import moment from 'moment';
 import histogram from "@/assets/js/histogramSlider";
 
+const preprocessing = require('@/assets/js/preprocessing')
 const d3 = require('d3');
 
 // histogram slider
@@ -242,15 +243,43 @@ export default {
                   return r;
                 });
 
-                cf2 = crossfilter(ccRecord);
-                dEmplTypeCc = cf2.dimension(d => d.location); // ************************+
-                dDateCc = cf2.dimension(d => d.Date);
+                d3.csv('car-assignments.csv').then((data) => {
+                  const carAssignments = data.map((d) => {
+                    return {
+                      CarID: +d.CarID,
+                      FirstName: d.FirstName,
+                      LastName: d.LastName,
+                      CurrentEmploymentType: d.CurrentEmploymentType,
+                      CurrentEmploymentTitle: d.CurrentEmploymentTitle
+                    }
+                  })
 
-                this.employees.value = [];
-                this.dates.value = [];
+                  const ccRecordJoined = preprocessing.join(carAssignments, ccRecord, "CarID", "id", function(cc, car) {
+                    return {
+                      Timestamp: cc.Timestamp,
+                      Date: cc.Date,
+                      CarID: car.CarID,
+                      FirstName: car.FirstName,
+                      LastName: car.LastName,
+                      price: cc.price,
+                      location: cc.location,
+                      CurrentEmploymentType: car.CurrentEmploymentType,
+                      CurrentEmploymentTitle: car.CurrentEmploymentTitle
+                    };
+                  });
 
-                this.refreshCharts();
-                this.refreshMap(dID);
+                  console.log(ccRecordJoined);
+
+                  cf2 = crossfilter(ccRecordJoined);
+                  dEmplTypeCc = cf2.dimension(d => d.CurrentEmploymentType);
+                  dDateCc = cf2.dimension(d => d.Date);
+
+                  this.employees.value = [];
+                  this.dates.value = [];
+
+                  this.refreshCharts();
+                  this.refreshMap(dID);
+                })
 
                 //this.ccRecord = ccRecord;
               });
