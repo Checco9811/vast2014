@@ -49,27 +49,7 @@ export default function histogram() {
 
     function chart(selection){
 
-        selection.each(function(){
-
-            x = d3.scaleLinear()
-                .domain(domain)
-                .range([0, width]);
-
-            var histogram = d3
-                .histogram()
-                .domain(x.domain())
-                .thresholds(x.ticks(Nbin));
-
-            var bins = histogram(data);
-
-            y = d3.scaleLinear()
-                .range([height, 0])
-                .domain([0, d3.max(bins, function(d) {
-                    return d.length;})
-                ]);
-
-            yAxis = d3.axisLeft(y);
-
+        selection.each(function() {
             svg = d3
                 .select(this)
                 .append("svg")
@@ -77,6 +57,10 @@ export default function histogram() {
                 .attr("height", height + margin.top + margin.bottom)
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            x = d3.scaleLinear()
+                .domain([d3.min(data), d3.max(data)])
+                .range([0, width]);
 
             xAxis = d3.axisBottom(x)
                 .tickFormat(formatMinutes)
@@ -86,21 +70,26 @@ export default function histogram() {
                 .attr("transform", "translate(0," + height + ")")
                 .call(xAxis);
 
-            svg.append("g")
-                .attr("class", "y-axis")
-                .call(yAxis);
+            y = d3.scaleLinear()
+                .range([height, 0]);
+
+            yAxis = svg.append("g");
+
+            var histogram = d3
+                .histogram()
+                .domain(x.domain())
+                .thresholds(x.ticks(Nbin));
+            var bins = histogram(data);
 
             bar = svg.selectAll(".bar")
                 .data(bins)
                 .enter()
-                .append("g")
+                .append("rect")
                 .attr("class", "bar")
+                .attr("x", 1)
                 .attr("transform", function(d) {
                     return "translate(" + x(d.x0) + "," + y(d.length) + ")";
-                });
-
-            bar.append("rect")
-                .attr("x", 1)
+                })
                 .attr("width", function(d) {
                     return x(d.x1) - x(d.x0) - 1;
                 })
@@ -110,44 +99,51 @@ export default function histogram() {
                 .style("fill", fillColor);
 
             svg.append("g")
+                .attr("class", "brush")
                 .call(brush);
 
-            updateData = function() {
-                var newHistogram = d3
+            updateData = function () {
+
+                var histogram = d3
                     .histogram()
                     .domain(x.domain())
                     .thresholds(x.ticks(Nbin));
 
-                var bins = newHistogram(data);
+                var bins = histogram(data);
 
-                y = d3.scaleLinear()
-                    .range([height, 0])
-                    .domain([0, d3.max(bins, function(d) {
-                        return d.length;})
-                    ]);
+                y.domain([0, d3.max(bins, function (d) {
+                    return d.length;
+                })]);
 
-                yAxis = d3.axisLeft(y);
+                yAxis.transition()
+                    .duration(1000)
+                    .call(d3.axisLeft(y));
 
-                d3.select('g.y-axis ').call(yAxis);
+                bar.data(bins);
 
-                bar.data(bins)
+                bar
+                    .enter()
+                    .append("rect")
+                    .merge(bar)
                     .transition()
-                    .duration(500)
+                    .duration(1000)
+                    .attr("class", "bar")
+                    .attr("x", 1)
                     .attr("transform", function(d) {
                         return "translate(" + x(d.x0) + "," + y(d.length) + ")";
                     })
-                    .select("rect")
-                    .attr("width", function(d) {
+                    .attr("width", function (d) {
                         return x(d.x1) - x(d.x0) - 1;
                     })
-                    .attr("height", function(d) {
+                    .attr("height", function (d) {
                         return height - y(d.length);
                     })
                     .style("fill", fillColor);
+
+                bar.exit().remove();
             }
 
         });
-
     }
 
     chart.data = function(value) {
