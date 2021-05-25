@@ -84,11 +84,22 @@
 
       <b-row>
         <b-col>
-          <Chart :cf-aggregation="dataEmploymentType"></Chart>
+          <h5>Credit Card Transactions</h5>
+          <div style="height:250px">
+            <Chart :cf-aggregation="dataEmploymentType"></Chart>
+          </div>
         </b-col>
         <b-col>
           <Chart></Chart>
         </b-col>
+      </b-row>
+
+      <b-row class="description">
+        <p>...</p>
+        <p>
+          <b-link @click="setEmploymentType('Executive')">Executive</b-link>
+        </p>
+        <p></p>
       </b-row>
 
     </b-container>
@@ -118,6 +129,7 @@ let dDate; // dimension for Date
 let dMinutes; // dimension for Minutes passed from 00:00
 
 let cf2;
+let dIDCc;
 let dEmplTypeCc;
 let dDateCc;
 let dMinutesCc;
@@ -137,7 +149,7 @@ export default {
       },
       dates: {
         value: [],
-        options: [{text: "Date", value: "2014-01-06"}]
+        options: [{text: "Mon Jan 06 2014", value: "2014-01-06"}]
       },
       ccRecord: [],
       fields: [
@@ -274,6 +286,7 @@ export default {
                   console.log(ccRecordJoined);
 
                   cf2 = crossfilter(ccRecordJoined);
+                  dIDCc = cf2.dimension(d => d.CarID);
                   dEmplTypeCc = cf2.dimension(d => d.CurrentEmploymentType);
                   dDateCc = cf2.dimension(d => d.Date);
                   dMinutesCc = cf2.dimension(d => d.Minutes);
@@ -306,6 +319,9 @@ export default {
     clearSelected() {
       this.$refs.selectableTable.clearSelected()
     },
+    setEmploymentType(type){
+      this.employmentType.value = new Array(type);
+    },
     updateTable(){
       var table = this.$refs.selectableTable;
 
@@ -333,6 +349,7 @@ export default {
         newVal.value.forEach(d => selectedIDs.push(d.CarID));
         dEmplType.filter(null); // to allow complex complex condition like "All the Employer of type 'Executive' + CarID 1"
         dID.filter(d => selectedIDs.indexOf(d) > -1);
+        dIDCc.filter(d => selectedIDs.indexOf(d) > -1);
 
         this.refreshCharts();
         this.refreshMap(dID);
@@ -401,6 +418,9 @@ export default {
 
 #navbar{
   background-color: #1f77b4!important;
+}
+#CarIDs{
+  font-size: 10px;
 }
 
 b-table{

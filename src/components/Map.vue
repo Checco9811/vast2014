@@ -20,15 +20,8 @@ export default {
   components: {
     LMap,
     LTileLayer,
-    // eslint-disable-next-line vue/no-unused-components
-    LMarker,
     LGeoJson,
-    // eslint-disable-next-line vue/no-unused-components
     LLayerGroup,
-    // eslint-disable-next-line vue/no-unused-components
-    LPolyline,
-    // eslint-disable-next-line vue/no-unused-components
-    LFeatureGroup
   },
   props:{
     coordinates:{
@@ -61,7 +54,7 @@ export default {
   },
   mounted(){
     var map = this.$refs.map.mapObject;
-    const specialGoods = new Array("MAXIMUM IRON AND STILL", "Frank's Fuels", "ABILA SCRAP", "PUMP");
+    const specialGoods = ["MAXIMUM IRON AND STILL", "Frank's Fuels", "ABILA SCRAP", "PUMP"];
     const transportation = ['Abila Airport', 'Port Of Abila'];
     const park = ['Pilau Park', 'Abila Park', 'Desafio Golf Course'];
 
