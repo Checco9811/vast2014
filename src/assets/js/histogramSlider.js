@@ -124,15 +124,15 @@ export default function histogram() {
                 .append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-            x = d3.scaleLinear()
+            x = d3.scaleTime()
                 .domain([+new Date(2014, 0, 6), +new Date(2014, 0, 19)])
                 .range([0, width]);
 
             xAxis = d3.axisBottom(x)
                 .ticks(14)
-                .tickFormat(d3.timeFormat("%b %d, %y"))
+                //.tickFormat(d3.timeFormat("%d %a, %I %p"))
 
-            svg.append("g")
+            var gxAxis = svg.append("g")
                 .attr("transform", "translate(0," + height + ")")
                 .call(xAxis);
 
@@ -165,7 +165,35 @@ export default function histogram() {
                 .style("fill", fillColor);
 
             gBrushes = svg.append('g')
-                .attr("class", "brushes")
+                .attr("class", "brushes");
+
+            var zoom = d3.zoom()
+                .scaleExtent([0, 20])
+                .extent([[0, 0], [width, height]])
+                .on("zoom", zoomed);
+
+
+            svg.attr("width", width)
+                .attr("height", height)
+                .call(zoom);
+
+            function zoomed(event) {
+                const newX = event.transform.rescaleX(x);
+
+                bar.attr("transform", function(d) {
+                    return "translate(" + newX(d.x0) + "," + y(d.length) + ")";
+                })
+                    .attr("width", function (d) {
+                        return newX(d.x1) - newX(d.x0) - 1;
+                    })
+                    .attr("height", function (d) {
+                        return height - y(d.length);
+                    })
+
+                gxAxis.call(d3.axisBottom(newX));
+                // the bars transform
+                //bar.attr("transform", "translate(" + event.transform.x+",0)scale(" + event.transform.k + ",1)")
+            }
 
             newBrush();
             drawBrushes();
