@@ -10,7 +10,7 @@
       </b-collapse>
     </b-navbar>
 
-    <b-container fluid="lg">
+    <b-container ref="container" fluid="lg">
 
       <b-row>
         <b-col>
@@ -62,19 +62,8 @@
           <Map :coordinates="coordinates" :ccRecord="ccRecord"></Map>
         </b-col>
 
-        <b-col cols="2">
-          <b-form-group
-              label="Select Dates">
-            <b-form-checkbox-group
-                v-model="dates.value"
-                :options="dates.options"
-                name="dateSelector"
-                stacked
-            ></b-form-checkbox-group>
-          </b-form-group>
-        </b-col>
-
       </b-row>
+
       <b-row>
         <b-col>
           <div id='hist'>
@@ -118,6 +107,7 @@ import histogram from "@/assets/js/histogramSlider";
 const preprocessing = require('@/assets/js/preprocessing')
 const d3 = require('d3');
 
+
 // histogram slider
 const histogramSlider = histogram();
 
@@ -125,8 +115,7 @@ const histogramSlider = histogram();
 let cf; // crossfilter instance
 let dID; // dimension for Id
 let dEmplType // dimension for EmploymentType
-let dDate; // dimension for Date
-let dMinutes; // dimension for Minutes passed from 00:00
+let dTimestamp;
 
 let cf2;
 let dIDCc;
@@ -147,10 +136,6 @@ export default {
         value: [],
         options: []
       },
-      dates: {
-        value: [],
-        options: [{text: "Mon Jan 06 2014", value: "2014-01-06"}]
-      },
       ccRecord: [],
       fields: [
         {key:'CarID', sortable: true},
@@ -160,10 +145,7 @@ export default {
         {key:'CurrentEmploymentTitle', sortable: true}
       ],
       isBusy: true,
-      range: {
-        min: 1,
-        max: 1440,
-      },
+      ranges : [],
       prettify: function(ts) {
         var date = new Date(0);
         date.setSeconds(ts*60);
@@ -177,12 +159,14 @@ export default {
     };
   },
   mounted(){
+    histogramSlider.width(this.$refs.container.clientWidth);
     // init histogram slider
     d3.select('#hist')
         .call(histogramSlider);
 
     histogramSlider.on('range', (range) =>{
-      this.range = {min: range[0], max: range[1]}
+      console.log(range);
+      this.ranges = range;
     })
 
     d3.csv('gps-joined.csv')
@@ -192,7 +176,7 @@ export default {
             const yyyymmdd = timestamp.toISOString().split("T")[0];
             const hhmmss = timestamp.toISOString().split("T")[1].split(".")[0];
             const r = {
-              Timestamp: timestamp,
+              Timestamp: +timestamp,
               Date: yyyymmdd,
               Minutes: moment.duration(hhmmss).asMinutes(),
               id: +d.id,
@@ -209,17 +193,10 @@ export default {
           cf = crossfilter(gpsRecord);
           dID = cf.dimension(d => d.id);
           dEmplType = cf.dimension(d => d.CurrentEmploymentType);
-          dDate = cf.dimension(d => d.Date);
-          dMinutes = cf.dimension(d => d.Minutes);
+          dTimestamp = cf.dimension(d => d.Timestamp);
 
           //finding unique values for the options
           this.employmentType.options = dEmplType.group().reduceCount().all().map(v => v.key);
-          this.dates.options = dDate.group().reduceCount().all().map(v => v.key).map(d => {
-            return {
-              text: new Date(d).toDateString(), // pretty print date
-              value: d
-            }
-          });
 
           const uniqueStrings = new Set(gpsRecord.map(d => { //slice to consider less record?
             return {
@@ -242,7 +219,7 @@ export default {
                   const yyyymmdd = timestamp.toISOString().split("T")[0];
                   const hhmmss = timestamp.toISOString().split("T")[1].split(".")[0];
                   const r = {
-                    Timestamp: timestamp,
+                    Timestamp: +timestamp,
                     Date: yyyymmdd,
                     Minutes: moment.duration(hhmmss).asMinutes(),
                     id: +d.CarID,
@@ -283,8 +260,6 @@ export default {
                     };
                   });
 
-                  console.log(ccRecordJoined);
-
                   cf2 = crossfilter(ccRecordJoined);
                   dIDCc = cf2.dimension(d => d.CarID);
                   dEmplTypeCc = cf2.dimension(d => d.CurrentEmploymentType);
@@ -292,7 +267,7 @@ export default {
                   dMinutesCc = cf2.dimension(d => d.Minutes);
 
                   this.employees.value = [];
-                  this.dates.value = [];
+                  this.ranges = [];
 
                   this.refreshCharts();
                   this.refreshMap(dID);
@@ -339,7 +314,7 @@ export default {
     },
     refreshHistogramSlider(){
       // ignoring the dMinutes dimension for the histogram slider
-      histogramSlider.data(cf.allFiltered([dMinutes]).map(d => d.Minutes));
+      histogramSlider.data(cf.allFiltered([dTimestamp]).map(d => d.Timestamp));
     }
   },
   watch: {
@@ -356,19 +331,6 @@ export default {
         this.refreshHistogramSlider();
       },
       deep:true // force watching within properties
-    },
-    dates: {
-      handler(newDate){
-        var selectedDates = []
-        newDate.value.forEach(d => selectedDates.push(d));
-        dDate.filter(d => selectedDates.indexOf(d) > -1);
-        dDateCc.filter(d => selectedDates.indexOf(d) > -1);
-
-        this.refreshCharts();
-        this.refreshMap(dDate);
-        this.refreshHistogramSlider();
-      },
-      deep: true
     },
     employmentType: {
       handler(newVal){
@@ -389,18 +351,25 @@ export default {
       },
       deep:true
     },
-    range: {
+    ranges: {
       handler(newRange){
-        dMinutes.filter(function (d) {
-          return d >= newRange.min && d <= newRange.max;
+        dTimestamp.filter(function (d) {
+          let filter = false;
+          newRange.forEach(r => {
+              filter |= d >= r[0] && d <= r[1];
+          })
+          return filter;
         });
 
+        /*
         dMinutesCc.filter(function (d) {
           return d >= newRange.min && d <= newRange.max;
         });
 
+         */
+
         this.refreshCharts();
-        this.refreshMap(dMinutes);
+        this.refreshMap(dTimestamp);
       }
     }
 

@@ -3,10 +3,10 @@ const d3 = require('d3');
 export default function histogram() {
     const dispatch = d3.dispatch('range');
 
-    var data = [1,1440] // data for the histogram
+    var data = [] // data for the histogram
         ,margin = { top: 30, right: 30, bottom: 30, left: 50 }
-        ,width = 1000
-        ,height = 100
+        ,width = 1100
+        ,height = 80
         ,fillColor = 'steelblue'
         ,xAxis
         ,yAxis
@@ -15,39 +15,105 @@ export default function histogram() {
         ,domain = [min,max]
         ,x
         ,y
-        ,Nbin = 24 // The number of bins
+        ,Nbin = 24*14 // The number of bins
         ,svg
         ,bar
-        ,updateData;
+        ,updateData
+        ,brushes = []
+        ,gBrushes;
 
-    const brush = d3.brushX()
-        .extent([[0, 0], [width, height]])
-        .on("end", brushed);
+    function newBrush() {
+        var brush = d3.brushX()
+            .extent([[0, 0], [width, height]])
+            .on("end", brushend);
 
-    const formatMinutes = function(d) {
-        var hours = Math.floor(d / 60),
-            minutes = Math.floor(d - hours*60),
-            output = '';
-        if (minutes) {
-            output = minutes + 'm ';
-        }
-        if (hours) {
-            if(hours <= 12)
-                output = hours + output + ' AM';
-            else
-                output = hours - 12 + output + ' PM';
-        }
-        return output;
-    };
+        brushes.push({id: brushes.length, brush: brush});
 
-    function brushed({selection}) {
-        if (selection != null) {
-            const selectedTime = selection.map(d => x.invert(d));
-            dispatch.call('range', this, selectedTime);
+        function brushend() {
+
+            // Figure out if our latest brush has a selection
+            var lastBrushID = brushes[brushes.length - 1].id
+            var lastBrush = document.getElementById('brush-' + lastBrushID);
+            var selection = d3.brushSelection(lastBrush);
+
+            var selections = [];
+
+            brushes.forEach(d => {
+                var id = d.id;
+                var selection = d3.brushSelection(document.getElementById('brush-' + id));
+                if (selection !== null){
+                    selections.push(selection.map(d => x.invert(d)));
+                    dispatch.call('range', this, selections);
+                }
+
+            })
+
+            // If it does, that means we need another one
+            if (selection && selection[0] !== selection[1]) {
+                newBrush();
+            }
+            // Always draw brushes
+            drawBrushes();
         }
     }
 
+    function drawBrushes() {
+
+        var brushSelection = gBrushes
+            .selectAll('.brush')
+            .data(brushes, function (d){return d.id});
+
+        // Set up new brushes
+        brushSelection.enter()
+            .insert("g", '.brush')
+            .attr('class', 'brush')
+            .attr('id', function(brush){ return "brush-" + brush.id; })
+            .each(function(brushObject) {
+                brushObject.brush(d3.select(this));
+            });
+
+        /* REMOVE POINTER EVENTS ON BRUSH OVERLAYS
+         *
+         * This part is abbit tricky and requires knowledge of how brushes are implemented.
+         * They register pointer events on a .overlay rectangle within them.
+         * For existing brushes, make sure we disable their pointer events on their overlay.
+         * This frees the overlay for the most current (as of yet with an empty selection) brush to listen for click and drag events
+         * The moving and resizing is done with other parts of the brush, so that will still work.
+         */
+        brushSelection
+            .each(function (brushObject){
+                d3.select(this)
+                    .attr('class', 'brush')
+                    .selectAll('.overlay')
+                    .style('pointer-events', function() {
+                        var brush = brushObject.brush;
+                        if (brushObject.id === brushes.length-1 && brush !== undefined) {
+                            return 'all';
+                        } else {
+                            return 'none';
+                        }
+                    });
+            }).on("dblclick", dblclicked);
+
+        function dblclicked() {
+            brushSelection.call(d3.brushX().clear);
+            brushes.splice(0,brushes.length);
+            newBrush();
+            dispatch.call('range', this, []);
+        }
+
+        brushSelection.exit()
+            .remove();
+    }
+
     function chart(selection){
+
+        console.log(width);
+        /*
+        const boundaries = selection.node().parentNode.getBoundingClientRect();
+        width = boundaries.width;
+
+         */
 
         selection.each(function() {
             svg = d3
@@ -59,12 +125,12 @@ export default function histogram() {
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
             x = d3.scaleLinear()
-                .domain([d3.min(data), d3.max(data)])
+                .domain([+new Date(2014, 0, 6), +new Date(2014, 0, 19)])
                 .range([0, width]);
 
             xAxis = d3.axisBottom(x)
-                .tickFormat(formatMinutes)
-                .tickValues(d3.range(0, d3.max(data), 60));
+                .ticks(14)
+                .tickFormat(d3.timeFormat("%b %d, %y"))
 
             svg.append("g")
                 .attr("transform", "translate(0," + height + ")")
@@ -98,9 +164,11 @@ export default function histogram() {
                 })
                 .style("fill", fillColor);
 
-            svg.append("g")
-                .attr("class", "brush")
-                .call(brush);
+            gBrushes = svg.append('g')
+                .attr("class", "brushes")
+
+            newBrush();
+            drawBrushes();
 
             updateData = function () {
 
@@ -111,9 +179,9 @@ export default function histogram() {
 
                 var bins = histogram(data);
 
-                y.domain([0, d3.max(bins, function (d) {
-                    return d.length;
-                })]);
+                y.domain([0, d3.max([1,d3.max(bins, function (d) {
+                    return d.length;})
+                ])]);
 
                 yAxis.transition()
                     .duration(1000)
