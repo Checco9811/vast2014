@@ -1,6 +1,7 @@
 const d3 = require('d3');
 
 export default function histogram() {
+
     const dispatch = d3.dispatch('range');
 
     var data = [] // data for the histogram
@@ -108,11 +109,9 @@ export default function histogram() {
 
     function chart(selection){
 
-        console.log(width);
         /*
         const boundaries = selection.node().parentNode.getBoundingClientRect();
         width = boundaries.width;
-
          */
 
         selection.each(function() {
@@ -129,7 +128,7 @@ export default function histogram() {
                 .range([0, width]);
 
             xAxis = d3.axisBottom(x)
-                .ticks(14)
+                .ticks(35)
                 //.tickFormat(d3.timeFormat("%d %a, %I %p"))
 
             var gxAxis = svg.append("g")
@@ -167,8 +166,9 @@ export default function histogram() {
             gBrushes = svg.append('g')
                 .attr("class", "brushes");
 
+            /*
             var zoom = d3.zoom()
-                .scaleExtent([0, 20])
+                .scaleExtent([1, 10])
                 .extent([[0, 0], [width, height]])
                 .on("zoom", zoomed);
 
@@ -179,21 +179,15 @@ export default function histogram() {
 
             function zoomed(event) {
                 const newX = event.transform.rescaleX(x);
-
+                //newX.domain([+new Date(2014, 0, 6), +new Date(2014, 0, 19)]);
                 bar.attr("transform", function(d) {
                     return "translate(" + newX(d.x0) + "," + y(d.length) + ")";
                 })
-                    .attr("width", function (d) {
-                        return newX(d.x1) - newX(d.x0) - 1;
-                    })
-                    .attr("height", function (d) {
-                        return height - y(d.length);
-                    })
 
                 gxAxis.call(d3.axisBottom(newX));
-                // the bars transform
-                //bar.attr("transform", "translate(" + event.transform.x+",0)scale(" + event.transform.k + ",1)")
             }
+
+             */
 
             newBrush();
             drawBrushes();
@@ -234,7 +228,7 @@ export default function histogram() {
                     .attr("height", function (d) {
                         return height - y(d.length);
                     })
-                    .style("fill", fillColor);
+                    .style("fill", fillColor)
 
                 bar.exit().remove();
             }

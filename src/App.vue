@@ -10,7 +10,7 @@
       </b-collapse>
     </b-navbar>
 
-    <b-container ref="container" fluid="lg">
+    <b-container ref="container" fluid="xl">
 
       <b-row>
         <b-col>
