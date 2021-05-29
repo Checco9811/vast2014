@@ -164,6 +164,26 @@ export default {
     }
   },
   methods:{
+    createTrajectories(coordinates){
+      var t=1;
+      const result = [];
+      var tmp = [];
+
+      for (var i = 0; i < coordinates.length-1; i++) {
+        if(coordinates[i+1].Timestamp - coordinates[i].Timestamp > 600000) {
+          result.push(tmp);
+          tmp = [];
+          t++;
+        }
+        tmp.push(coordinates[i])
+      }
+
+      if(result.length == 0) {
+        result.push(tmp);
+      }
+
+      return result;
+    },
     refreshMap(coordinates) {
       var map = this.$refs.map.mapObject;
       var features = this.$refs.features.mapObject;
@@ -181,68 +201,76 @@ export default {
             id: id,
             Date: d[0],
             //trajs: d[1].map(p => ([p.lat, p.long])),
-            trajs: d[1].sort((a, b) => a.Timestamp - b.Timestamp).map(p => ([ p.lat, p.long ])),
+            trajs: d[1].sort((a, b) => a.Timestamp - b.Timestamp)
+                .map(p => {
+                  return {
+                    p: [ p.lat, p.long],
+                    Timestamp: p.Timestamp
+                  }
+                }),
           })
         })
       });
 
-      //console.log(idList);
-      //console.log(dateList);
+      console.log(trs);
 
       features.clearLayers();
 
-      /*
-      //remove from map non selected CarIDs & Dates
-      features.eachLayer(function (layer) {
-        if(!idList.includes(layer.options.id) || !dateList.includes(layer.options.Date)){
-          features.removeLayer(layer);
-        }
-      });
-       */
-
-      var i=0;
-
       //add to map the new trajectories
       trs.forEach(d => {
-        var polyline = L.polyline(d.trajs,
-            {
-              //color: this.colors[i],
-              color: 'black',
-              weight: 2,
-              smoothFactor: 3,
-              opacity: 0.4,
-              id: d.id,
-              Date: d.Date
-            });
+        var newTrajs = this.createTrajectories(d.trajs);
+        console.log(newTrajs);
 
-        polyline.on('mouseover', function(e) {
-          L.popup()
-            .setLatLng(e.latlng)
-            .setContent('<p>'+d.id+'</p>' + ' ' + d.Date)
-            .openOn(map);
-        });
+        newTrajs.forEach(dd => {
+          var polyline = L.polyline(dd.map(dd => dd.p),
+              {
+                color: 'black',
+                weight: 2,
+                smoothFactor: 3,
+                opacity: 0.4,
+                id: d.id,
+                Date: d.Date
+              });
 
-        polyline.addTo(features);
-        i++;
+          polyline.on('mouseover', function(e) {
+            L.popup()
+                .setLatLng(e.latlng)
+                .setContent(d.id +' '+ d.Date)
+                .openOn(map);
+          });
+
+          var startPoint = L.circleMarker(dd[0].p, style());
+          startPoint.on('mouseover', function(e) {
+            L.popup()
+                .setLatLng(e.latlng)
+                .setContent('Start: '+dd[0].Timestamp.toISOString())
+                .openOn(map);
+          });
+          var endPoint = L.circleMarker(dd[dd.length-1].p, style());
+          endPoint.on('mouseover', function(e) {
+            L.popup()
+                .setLatLng(e.latlng)
+                .setContent('End: '+dd[dd.length-1].Timestamp.toISOString())
+                .openOn(map);
+          });
+
+          startPoint.addTo(features);
+          endPoint.addTo(features);
+          polyline.addTo(features);
+        })
       });
 
-    }
-  },
-  createTrajectories(coordinates){
-    // eslint-disable-next-line no-unused-vars
-    var t=0;
-    const result = [];
-    var tmp = [];
-
-    for (var i = 0; i < coordinates.length; i++) {
-      if(coordinates[i+1].Timestamp - coordinates[i].Timestamp > 2) {
-        result.push({
-          t: tmp
-        });
-        tmp = [];
-        t++;
+      function style() {
+        return {
+          radius: 2.5,
+          fillColor: 'black',
+          color: "#000",
+          weight: 1,
+          opacity: 1,
+          fillOpacity: 0.7
+        };
       }
-      tmp.push([coordinates[i].lat, coordinates[i].long])
+
     }
   }
 
