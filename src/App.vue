@@ -293,6 +293,7 @@ export default {
 
                   this.employees.value = [];
                   this.dates.value = [];
+                  this.range = {min:0, max:0};
 
                   this.refreshCharts();
                   this.refreshMap(dID);

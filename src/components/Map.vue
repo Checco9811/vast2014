@@ -165,15 +165,16 @@ export default {
   },
   methods:{
     createTrajectories(coordinates){
-      var t=1;
       const result = [];
       var tmp = [];
 
       for (var i = 0; i < coordinates.length-1; i++) {
         if(coordinates[i+1].Timestamp - coordinates[i].Timestamp > 600000) {
+          if(tmp.length==0){
+            tmp.push(coordinates[i]);
+          }
           result.push(tmp);
           tmp = [];
-          t++;
         }
         tmp.push(coordinates[i])
       }
