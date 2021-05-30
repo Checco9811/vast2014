@@ -3,7 +3,7 @@ const d3 = require('d3');
 export default function histogram() {
     const dispatch = d3.dispatch('range');
 
-    var data = [1,1440] // data for the histogram
+    var data = [1, 1440] // data for the histogram
         ,margin = { top: 30, right: 30, bottom: 30, left: 50 }
         ,width = 1000
         ,height = 100
@@ -18,6 +18,7 @@ export default function histogram() {
         ,Nbin = 24 // The number of bins
         ,svg
         ,bar
+        ,gBrushes
         ,updateData;
 
     const brush = d3.brushX()
@@ -47,6 +48,11 @@ export default function histogram() {
         }
     }
 
+    function dblclicked() {
+        gBrushes.call(d3.brushX().clear);
+        dispatch.call('range', this, []);
+    }
+
     function chart(selection){
 
         selection.each(function() {
@@ -59,7 +65,7 @@ export default function histogram() {
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
             x = d3.scaleLinear()
-                .domain([d3.min(data), d3.max(data)])
+                .domain(domain)
                 .range([0, width]);
 
             xAxis = d3.axisBottom(x)
@@ -98,9 +104,10 @@ export default function histogram() {
                 })
                 .style("fill", fillColor);
 
-            svg.append("g")
+            gBrushes = svg.append("g")
                 .attr("class", "brush")
-                .call(brush);
+                .call(brush)
+                .on("dblclick", dblclicked); // on double click remove the current brush
 
             updateData = function () {
 

@@ -212,29 +212,6 @@ export default {
           dDate = cf.dimension(d => d.Date);
           dMinutes = cf.dimension(d => d.Minutes);
 
-          //finding unique values for the options
-          this.employmentType.options = dEmplType.group().reduceCount().all().map(v => v.key);
-          this.dates.options = dDate.group().reduceCount().all().map(v => v.key).map(d => {
-            return {
-              text: new Date(d).toDateString(), // pretty print date
-              value: d
-            }
-          });
-
-          const uniqueStrings = new Set(gpsRecord.map(d => { //slice to consider less record?
-            return {
-              CarID: d.id,
-              FirstName: d.FirstName,
-              LastName: d.LastName,
-              CurrentEmploymentType: d.CurrentEmploymentType,
-              CurrentEmploymentTitle: d.CurrentEmploymentTitle
-            }
-          }).map(JSON.stringify));
-          const uniqueStringsArray = Array.from(uniqueStrings);
-          this.employees.options = uniqueStringsArray.map(JSON.parse);
-
-          this.toggleBusy();
-
           d3.csv('cc_data_processed.csv')
               .then((data) => {
                 const ccRecord = data.map((d) => {
@@ -283,13 +260,34 @@ export default {
                     };
                   });
 
-                  console.log(ccRecordJoined);
-
                   cf2 = crossfilter(ccRecordJoined);
                   dIDCc = cf2.dimension(d => d.CarID);
                   dEmplTypeCc = cf2.dimension(d => d.CurrentEmploymentType);
                   dDateCc = cf2.dimension(d => d.Date);
                   dMinutesCc = cf2.dimension(d => d.Minutes);
+
+                  //finding unique values for the options
+                  this.employmentType.options = dEmplType.group().reduceCount().all().map(v => v.key);
+                  this.dates.options = dDate.group().reduceCount().all().map(v => v.key).map(d => {
+                    return {
+                      text: new Date(d).toDateString(), // pretty print date
+                      value: d
+                    }
+                  });
+
+                  const uniqueStrings = new Set(gpsRecord.map(d => { //slice to consider less record?
+                    return {
+                      CarID: d.id,
+                      FirstName: d.FirstName,
+                      LastName: d.LastName,
+                      CurrentEmploymentType: d.CurrentEmploymentType,
+                      CurrentEmploymentTitle: d.CurrentEmploymentTitle
+                    }
+                  }).map(JSON.stringify));
+                  const uniqueStringsArray = Array.from(uniqueStrings);
+                  this.employees.options = uniqueStringsArray.map(JSON.parse);
+
+                  this.toggleBusy();
 
                   this.employees.value = [];
                   this.dates.value = [];
@@ -373,7 +371,6 @@ export default {
     },
     employmentType: {
       handler(newVal){
-        console.log(newVal.value.length);
         if(newVal.value.length != 0) {
           var selectedTypes = []
           newVal.value.forEach(d => selectedTypes.push(d));
