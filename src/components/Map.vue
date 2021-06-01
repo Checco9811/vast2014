@@ -11,9 +11,10 @@
 
 <script>
 const d3 = require('d3');
+const preprocessing = require('@/assets/js/preprocessing')
 import L from 'leaflet';
 import { latLngBounds } from "leaflet";
-import { LMap, LTileLayer, LMarker, LGeoJson, LPolyline, LLayerGroup, LFeatureGroup} from 'vue2-leaflet';
+import { LMap, LTileLayer, LGeoJson, LLayerGroup} from 'vue2-leaflet';
 
 export default {
   name: "Map",
@@ -35,7 +36,6 @@ export default {
   },
   data () {
     return {
-      specialGoods: [],
       url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
       zoom: 13,
       center: [36.070512, 24.864487],
@@ -59,20 +59,17 @@ export default {
             fillOpacity: 0.7});
         },
         onEachFeature: function onEachFeature(feature, layer) {
-          layer.bindPopup(feature.properties.name, {permanent: true});
+          layer.bindPopup('<b>' + 'Location' + '</b>' + ': ' +feature.properties.name + '<br/>' +
+                          '<b>' + '#Transactions' + '</b>' + ': 0' + '<br/>'
+                      , {permanent: true});
         }
       },
       geoJson: null,
       locations: null,
-      colors: ['#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928'], // qualitative colors
     }
   },
   mounted(){
     var map = this.$refs.map.mapObject;
-    const specialGoods = ["MAXIMUM IRON AND STILL", "Frank's Fuels", "ABILA SCRAP", "PUMP"];
-    const transportation = ['Abila Airport', 'Port Of Abila'];
-    const park = ['Pilau Park', 'Abila Park', 'Desafio Golf Course'];
-
     //Loading map
     d3.json('Abila.geojson')
         .then((data) => {
@@ -82,57 +79,25 @@ export default {
           d3.json('location.geojson')
               .then((data) => {
                 this.locations = data;
-                /*
-                var locations = this.$refs.locations.mapObject;
-                L.geoJSON(data, {
-                  pointToLayer: function (feature, latlng) {
-                    return L.circleMarker(latlng, style(feature));
-                  },
-                  onEachFeature: function onEachFeature(feature, layer) {
-                    layer.bindPopup(feature.properties.name, {permanent: true});
-                  }
-                }).addTo(locations);
-                */
-                L.control.legend({
-                  items: [
-                    {color: 'orange', label: 'SpecialGoods'},
-                    {color: 'red', label: 'transportation'},
-                    {color: 'brown', label: 'GAStech'},
-                    {color: 'grey', label: 'Unknown'},
-                    {color: 'blue', label: 'Shop'},
-                    {color: 'green', label: 'Park'},
-                    {color: 'violet', label: 'Restaurant'},
-                    {color: 'pink', label: 'SpecialMeeting'},
-                    {color: 'yellow', label: 'Uncertain'},
-                  ],
-                  collapsed: false,
-                  position: 'topright',
-                  buttonHtml: 'Legend'
-                }).addTo(map);
-
-
-                function getColor(d) {
-                  if(specialGoods.includes(d.properties.name))
-                    return "#ff7800";
-                  else if(transportation.includes(d.properties.name))
-                    return "#FF0000"
-                  else
-                    return "black";
-                }
-
-                /*
-                function style(feature) {
-                  return {
-                    radius: 10,
-                    fillColor: getColor(feature),
-                    color: "#000",
-                    weight: 1,
-                    opacity: 1,
-                    fillOpacity: 0.7
-                  };
-                }
-                */
               });
+
+          L.control.legend({
+            items: [
+              {color: 'orange', label: 'SpecialGoods'},
+              {color: 'red', label: 'transportation'},
+              {color: 'brown', label: 'GAStech'},
+              {color: 'grey', label: 'Unknown'},
+              {color: 'blue', label: 'Shop'},
+              {color: 'green', label: 'Park'},
+              {color: 'violet', label: 'Restaurant'},
+              {color: 'pink', label: 'SpecialMeeting'},
+              {color: 'yellow', label: 'Uncertain'},
+            ],
+            collapsed: false,
+            position: 'topright',
+            buttonHtml: 'Legend'
+          }).addTo(map);
+
         });
   },
   watch:{
@@ -146,54 +111,24 @@ export default {
         const ccCounts = d3.rollup(newCcRecords, v => v.length, d => d.location.toLocaleLowerCase().trim());
         const scaleRadius = d3.scaleSqrt([0, d3.max(ccCounts.values())], [5, 20]);
 
-        const specialGoods = new Array("MAXIMUM IRON AND STILL", "Frank's Fuels", "ABILA SCRAP", "PUMP");
-        const transportation = ['Abila Airport', 'Port Of Abila'];
-
         var map = this.$refs.map.mapObject;
         var locationsLayer = this.$refs.locations.mapObject;
 
         locationsLayer.eachLayer(function(layer) {
           var value = ccCounts.get(layer.feature.properties.name.toLocaleLowerCase().trim());
-          if(value != null)
-            layer.setRadius(scaleRadius(value));
-          else
-            layer.setRadius(5);
-        });
+          if(value == null)
+            value = 0;
 
-        /*
-        locationsLayer.forEach(d => {
-          var point = L.circleMarker([d.lat, d.long], style(d.location));
-          point.on('mouseover', function(e) {
+          layer.setRadius(scaleRadius(value) == 0 ? scaleRadius(value) : 5);
+          layer.on('click', function(e) {
             L.popup()
                 .setLatLng(e.latlng)
-                //.setContent('<h1>'+d.CarID+'</h1>'+d.id + ' ' + d.location)
+                .setContent('<b>' + 'Location' + '</b>' + ': ' +layer.feature.properties.name + '<br/>' +
+                            '<b>' + '#Transactions' + '</b>' + ': '+ value + '<br/>')
                 .openOn(map);
           });
 
-          point.addTo(locationsLayer);
         });
-
-         */
-
-        function getColor(d) {
-          if(specialGoods.includes(d))
-            return "#ff7800";
-          else if(transportation.includes(d))
-            return "#FF0000"
-          else
-            return "black";
-        }
-
-        function style(feature) {
-          return {
-            radius: 2.5,
-            fillColor: getColor(feature),
-            color: "#000",
-            weight: 1,
-            opacity: 1,
-            fillOpacity: 0.7
-          };
-        }
       }
     }
   },
@@ -231,7 +166,6 @@ export default {
           trs.push({
             id: id,
             Date: d[0],
-            //trajs: d[1].map(p => ([p.lat, p.long])),
             trajs: d[1].sort((a, b) => a.Timestamp - b.Timestamp)
                 .map(p => {
                   return {
@@ -266,24 +200,32 @@ export default {
             polyline.on('mouseover', function (e) {
               L.popup()
                   .setLatLng(e.latlng)
-                  .setContent(d.id + ' ' + d.Date)
+                  .setContent('<b>' + 'CarId' + '</b>' + ': ' +d.id + '<br/>' +
+                              '<b>' + 'Start' + '</b>' + ': '+ preprocessing.formatDate(dd[0].Timestamp) + '<br/>' +
+                              '<b>' + 'Stop' + '</b>' + ': '+ preprocessing.formatDate(dd[dd.length - 1].Timestamp) + '<br/>')
                   .openOn(map);
             });
 
             var startPoint = L.circleMarker(dd[0].p, style());
+
+            /*
             startPoint.on('mouseover', function (e) {
               L.popup()
                   .setLatLng(e.latlng)
                   .setContent('Start: ' + dd[0].Timestamp.toISOString())
                   .openOn(map);
             });
+            */
+
             var endPoint = L.circleMarker(dd[dd.length - 1].p, style());
-            endPoint.on('mouseover', function (e) {
+
+            /*endPoint.on('mouseover', function (e) {
               L.popup()
                   .setLatLng(e.latlng)
                   .setContent('End: ' + dd[dd.length - 1].Timestamp.toISOString())
                   .openOn(map);
             });
+             */
 
             startPoint.addTo(features);
             endPoint.addTo(features);

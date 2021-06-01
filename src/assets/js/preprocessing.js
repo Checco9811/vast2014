@@ -14,3 +14,10 @@ exports.join = (lookupTable, mainTable, lookupKey, mainKey, select) => {
     }
     return output;
 }
+
+exports.formatDate = (date) => {
+    var dateString = date.toISOString().split("T");
+    const d1 = dateString[0];
+    const d2 = dateString[1].split(".")[0];
+    return d1 + ' ' + d2;
+}

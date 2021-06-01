@@ -153,15 +153,9 @@ export default {
         },
         value: ''
       },
-      /*
-      dates: {
-        value: [],
-        options: [{text: "Mon Jan 06 2014", value: "2014-01-06"}]
-      },
-       */
       ccRecord: [],
       fields: [
-        {key:'CarID', sortable: true, thClass: 'd-none', tdClass: 'd-none'},
+        {key:'CarID', sortable: true},
         {key:'FirstName', sortable: true},
         {key:'LastName', sortable: true},
         {key:'CurrentEmploymentType', sortable: true},
@@ -279,14 +273,7 @@ export default {
 
                   /*
                   this.dateOptions.enable = dDate.group().reduceCount().all().map(v => v.key);
-                  this.dates.options = dDate.group().reduceCount().all().map(v => v.key).map(d => {
-                    return {
-                      text: new Date(d).toDateString(), // pretty print date
-                      value: d
-                    }
-                  });
-
-                   */
+                  */
 
                   const uniqueStrings = new Set(gpsRecord.map(d => { //slice to consider less record?
                     return {
@@ -303,14 +290,12 @@ export default {
                   this.toggleBusy();
 
                   this.employees.value = [];
-                  this.dates.value = [];
+                  this.dates.value = '2014-01-06';
                   this.range = {min:0, max:0};
 
                   this.refreshCharts();
                   this.refreshMap(dID, dIDCc);
                 })
-
-                this.ccRecord = ccRecord;
               });
         });
 
@@ -373,7 +358,7 @@ export default {
     dates: {
       handler(newDate){
         var selectedDates = [];
-        console.log(newDate.value.split(";"));
+
         newDate.value.split(";").forEach(d => selectedDates.push(d.trim()));
         dDate.filter(d => selectedDates.indexOf(d) > -1);
         dDateCc.filter(d => selectedDates.indexOf(d) > -1);
