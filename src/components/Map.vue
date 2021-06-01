@@ -52,7 +52,7 @@ export default {
         pointToLayer: function (feature, latlng) {
           return L.circleMarker(latlng, {
             radius: 5,
-            fillColor: "black",
+            fillColor: feature.properties.color,
             color: "#000",
             weight: 1,
             opacity: 1,
