@@ -50,7 +50,8 @@ export default {
       mapStyle: {"color": "grey", "opacity": 0.5},
       options: {
         pointToLayer: function (feature, latlng) {
-          return L.circleMarker(latlng, {radius: 10,
+          return L.circleMarker(latlng, {
+            radius: 5,
             fillColor: "black",
             color: "#000",
             weight: 1,
@@ -80,8 +81,9 @@ export default {
           //Loading locations
           d3.json('location.geojson')
               .then((data) => {
-                this.locations=data;
-                /*var locations = this.$refs.locations.mapObject;
+                this.locations = data;
+                /*
+                var locations = this.$refs.locations.mapObject;
                 L.geoJSON(data, {
                   pointToLayer: function (feature, latlng) {
                     return L.circleMarker(latlng, style(feature));
@@ -90,7 +92,7 @@ export default {
                     layer.bindPopup(feature.properties.name, {permanent: true});
                   }
                 }).addTo(locations);
-*/
+                */
                 L.control.legend({
                   items: [
                     {color: 'orange', label: 'SpecialGoods'},
@@ -141,10 +143,8 @@ export default {
     },
     ccRecord: {
       handler(newCcRecords){
-        console.log(newCcRecords);
-
-        const ccCounts = d3.rollup(newCcRecords, v => v.length, d => d.location.toLocaleLowerCase());
-        const scaleRadius = d3.scaleSqrt([0, d3.max(ccCounts.values())], [1, 40]);
+        const ccCounts = d3.rollup(newCcRecords, v => v.length, d => d.location.toLocaleLowerCase().trim());
+        const scaleRadius = d3.scaleSqrt([0, d3.max(ccCounts.values())], [5, 20]);
 
         const specialGoods = new Array("MAXIMUM IRON AND STILL", "Frank's Fuels", "ABILA SCRAP", "PUMP");
         const transportation = ['Abila Airport', 'Port Of Abila'];
@@ -152,16 +152,13 @@ export default {
         var map = this.$refs.map.mapObject;
         var locationsLayer = this.$refs.locations.mapObject;
 
-
-        console.log(locationsLayer);
         locationsLayer.eachLayer(function(layer) {
-          var value = ccCounts.get(layer.feature.properties.name.toLocaleLowerCase());
-          console.log(value, scaleRadius(value));
-          layer.setRadius(value);
+          var value = ccCounts.get(layer.feature.properties.name.toLocaleLowerCase().trim());
+          if(value != null)
+            layer.setRadius(scaleRadius(value));
+          else
+            layer.setRadius(5);
         });
-
-          //point.setRadius({radius: ccCounts.get(point.location)})
-        //locationsLayer.clearLayers();
 
         /*
         locationsLayer.forEach(d => {
@@ -202,6 +199,7 @@ export default {
   },
   methods:{
     createTrajectories(coordinates){
+      console.log(coordinates);
       const result = [];
       var tmp = [];
 
@@ -212,6 +210,7 @@ export default {
           tmp = [];
         }
       }
+
       result.push(tmp);
 
       return result;
@@ -253,41 +252,43 @@ export default {
         console.log(newTrajs);
 
         newTrajs.forEach(dd => {
-          var polyline = L.polyline(dd.map(dd => dd.p),
-              {
-                color: 'black',
-                weight: 2,
-                smoothFactor: 3,
-                opacity: 0.4,
-                id: d.id,
-                Date: d.Date
-              });
+          if(dd.length != 0) { // draw only array with more than 1 coordinates
+            var polyline = L.polyline(dd.map(dd => dd.p),
+                {
+                  color: 'black',
+                  weight: 2,
+                  smoothFactor: 3,
+                  opacity: 0.4,
+                  id: d.id,
+                  Date: d.Date
+                });
 
-          polyline.on('mouseover', function(e) {
-            L.popup()
-                .setLatLng(e.latlng)
-                .setContent(d.id +' '+ d.Date)
-                .openOn(map);
-          });
+            polyline.on('mouseover', function (e) {
+              L.popup()
+                  .setLatLng(e.latlng)
+                  .setContent(d.id + ' ' + d.Date)
+                  .openOn(map);
+            });
 
-          var startPoint = L.circleMarker(dd[0].p, style());
-          startPoint.on('mouseover', function(e) {
-            L.popup()
-                .setLatLng(e.latlng)
-                .setContent('Start: '+dd[0].Timestamp.toISOString())
-                .openOn(map);
-          });
-          var endPoint = L.circleMarker(dd[dd.length-1].p, style());
-          endPoint.on('mouseover', function(e) {
-            L.popup()
-                .setLatLng(e.latlng)
-                .setContent('End: '+dd[dd.length-1].Timestamp.toISOString())
-                .openOn(map);
-          });
+            var startPoint = L.circleMarker(dd[0].p, style());
+            startPoint.on('mouseover', function (e) {
+              L.popup()
+                  .setLatLng(e.latlng)
+                  .setContent('Start: ' + dd[0].Timestamp.toISOString())
+                  .openOn(map);
+            });
+            var endPoint = L.circleMarker(dd[dd.length - 1].p, style());
+            endPoint.on('mouseover', function (e) {
+              L.popup()
+                  .setLatLng(e.latlng)
+                  .setContent('End: ' + dd[dd.length - 1].Timestamp.toISOString())
+                  .openOn(map);
+            });
 
-          startPoint.addTo(features);
-          endPoint.addTo(features);
-          polyline.addTo(features);
+            startPoint.addTo(features);
+            endPoint.addTo(features);
+            polyline.addTo(features);
+          }
         })
       });
 

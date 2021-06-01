@@ -18,6 +18,7 @@
     "moment": "^2.29.1",
     "plotly.js": "^1.58.4",
     "vue": "^2.6.12",
+    "vue-blu": "^0.1.9",
     "vue-histogram-slider": "^0.3.8",
     "vue-slider-component": "^3.2.11",
     "vue2-leaflet": "^2.7.0"

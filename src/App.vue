@@ -56,25 +56,21 @@
             </b-col>
 
           </b-row>
+          <b-row>
+            <b-col>
+              <datepicker
+                  placeholder="Select Dates"
+                  v-model="dates.value"
+                  :options="dates.options"></datepicker>
+            </b-col>
+          </b-row>
         </b-col>
 
         <b-col>
           <Map :coordinates="coordinates" :ccRecord="ccRecord"></Map>
         </b-col>
-
-        <b-col cols="2">
-          <b-form-group
-              label="Select Dates">
-            <b-form-checkbox-group
-                v-model="dates.value"
-                :options="dates.options"
-                name="dateSelector"
-                stacked
-            ></b-form-checkbox-group>
-          </b-form-group>
-        </b-col>
-
       </b-row>
+
       <b-row>
         <b-col>
           <div id='hist'>
@@ -101,6 +97,7 @@
         </p>
         <p></p>
       </b-row>
+
 
     </b-container>
 
@@ -148,12 +145,23 @@ export default {
         options: []
       },
       dates: {
+        options:{
+          mode: 'multiple',
+          minDate: '2014-01-06',
+          maxDate: '2014-01-19',
+          defaultDate: '2014-01-06'
+        },
+        value: null
+      },
+      /*
+      dates: {
         value: [],
         options: [{text: "Mon Jan 06 2014", value: "2014-01-06"}]
       },
+       */
       ccRecord: [],
       fields: [
-        {key:'CarID', sortable: true},
+        {key:'CarID', sortable: true, thClass: 'd-none', tdClass: 'd-none'},
         {key:'FirstName', sortable: true},
         {key:'LastName', sortable: true},
         {key:'CurrentEmploymentType', sortable: true},
@@ -268,12 +276,17 @@ export default {
 
                   //finding unique values for the options
                   this.employmentType.options = dEmplType.group().reduceCount().all().map(v => v.key);
+
+                  /*
+                  this.dateOptions.enable = dDate.group().reduceCount().all().map(v => v.key);
                   this.dates.options = dDate.group().reduceCount().all().map(v => v.key).map(d => {
                     return {
                       text: new Date(d).toDateString(), // pretty print date
                       value: d
                     }
                   });
+
+                   */
 
                   const uniqueStrings = new Set(gpsRecord.map(d => { //slice to consider less record?
                     return {
@@ -294,7 +307,7 @@ export default {
                   this.range = {min:0, max:0};
 
                   this.refreshCharts();
-                  this.refreshMap(dID);
+                  this.refreshMap(dID, dIDCc);
                 })
 
                 this.ccRecord = ccRecord;
@@ -303,8 +316,9 @@ export default {
 
   },
   methods: {
-    refreshMap(cfDimension) {
-      this.coordinates = cfDimension.top(Infinity);
+    refreshMap(cfDimension1, cfDimension2) {
+      this.coordinates = cfDimension1.top(Infinity);
+      this.ccRecord = cfDimension2.top(Infinity);
     },
     onRowSelected(items) {
       this.employees.value = items
@@ -351,20 +365,21 @@ export default {
         dIDCc.filter(d => selectedIDs.indexOf(d) > -1);
 
         this.refreshCharts();
-        this.refreshMap(dID);
+        this.refreshMap(dID, dIDCc);
         this.refreshHistogramSlider();
       },
       deep:true // force watching within properties
     },
     dates: {
       handler(newDate){
-        var selectedDates = []
-        newDate.value.forEach(d => selectedDates.push(d));
+        var selectedDates = [];
+        console.log(newDate.value.split(";"));
+        newDate.value.split(";").forEach(d => selectedDates.push(d.trim()));
         dDate.filter(d => selectedDates.indexOf(d) > -1);
         dDateCc.filter(d => selectedDates.indexOf(d) > -1);
 
         this.refreshCharts();
-        this.refreshMap(dDate);
+        this.refreshMap(dDate, dDateCc);
         this.refreshHistogramSlider();
       },
       deep: true
@@ -375,9 +390,10 @@ export default {
           var selectedTypes = []
           newVal.value.forEach(d => selectedTypes.push(d));
           dEmplType.filter(d => selectedTypes.indexOf(d) > -1);
+          dEmplTypeCc.filter(d => selectedTypes.indexOf(d) > -1);
 
           this.refreshCharts();
-          this.refreshMap(dEmplType);
+          this.refreshMap(dEmplType, dEmplTypeCc);
           this.refreshHistogramSlider();
         }else{
           dEmplType.filter(null);
@@ -398,7 +414,7 @@ export default {
         });
 
         this.refreshCharts();
-        this.refreshMap(dMinutes);
+        this.refreshMap(dMinutes, dMinutesCc);
       }
     }
 
@@ -417,8 +433,9 @@ export default {
 #navbar{
   background-color: #1f77b4!important;
 }
+
 #CarIDs{
-  font-size: 10px;
+  font-size: 12px;
 }
 
 b-table{
