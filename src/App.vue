@@ -13,22 +13,6 @@
     <b-container fluid="lg">
 
       <b-row>
-        <b-col>
-          <b-form-group label="Select Employment Type">
-            <b-form-checkbox-group
-                v-model="employmentType.value"
-                :options="employmentType.options"
-                name="buttonsEmploymentType"
-                buttons
-            ></b-form-checkbox-group>
-          </b-form-group>
-        </b-col>
-        <b-col>
-
-        </b-col>
-      </b-row>
-
-      <b-row>
         <b-col cols="4">
           <b-row>
             <b-table
@@ -54,16 +38,32 @@
               <b-button size="sm" @click="selectAllRows">Select all</b-button>
               <b-button size="sm" @click="clearSelected">Clear selected</b-button>
             </b-col>
-
           </b-row>
+
           <b-row>
             <b-col>
+              <b-form-group label="Select Employment Type">
+                <b-form-checkbox-group
+                    v-model="employmentType.value"
+                    :options="employmentType.options"
+                    name="buttonsEmploymentType"
+                    size="sm"
+                    buttons
+                ></b-form-checkbox-group>
+              </b-form-group>
+            </b-col>
+          </b-row>
+
+          <b-row>
+            <b-col>
+              <h5>Date selector</h5>
               <datepicker
                   placeholder="Select Dates"
                   v-model="dates.value"
                   :options="dates.options"></datepicker>
             </b-col>
           </b-row>
+
         </b-col>
 
         <b-col>
@@ -151,7 +151,7 @@ export default {
           maxDate: '2014-01-19',
           defaultDate: '2014-01-06'
         },
-        value: null
+        value: ''
       },
       /*
       dates: {
