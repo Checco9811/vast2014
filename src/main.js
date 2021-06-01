@@ -15,9 +15,13 @@ import { Icon } from 'leaflet';
 
 import "vue-histogram-slider/dist/histogram-slider.css";
 
-import VueBlu from 'vue-blu'
-import 'vue-blu/dist/css/vue-blu.min.css'
+import VueBlu from 'vue-blu';
+import 'vue-blu/dist/css/vue-blu.min.css';
 
+import 'vue-swatches/dist/vue-swatches.css';
+import VSwatches from 'vue-swatches'
+
+Vue.use(VSwatches);
 Vue.use(VueBlu)
 
 Vue.component('l-map', LMap);

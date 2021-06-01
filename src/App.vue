@@ -32,6 +32,13 @@
                   <strong>Loading...</strong>
                 </div>
               </template>
+
+              <template v-slot:cell(Color)="row">
+
+                <v-swatches @click.native.stop v-model="row.item.Color" popover-x="left"></v-swatches>
+
+              </template>
+
             </b-table>
 
             <b-col>
@@ -98,7 +105,6 @@
         <p></p>
       </b-row>
 
-
     </b-container>
 
   </div>
@@ -108,6 +114,7 @@
 
 import Map from '@/components/Map';
 import Chart from "@/components/Chart";
+import VSwatches from 'vue-swatches'
 import crossfilter from 'crossfilter2';
 import moment from 'moment';
 import histogram from "@/assets/js/histogramSlider";
@@ -134,11 +141,13 @@ let dMinutesCc;
 export default {
   name: 'App',
   components: {
+    VSwatches,
     Chart,
     Map
   },
   data () {
     return {
+      color: '',
       coordinates: [],
       employees: {
         value: [],
@@ -159,7 +168,8 @@ export default {
         {key:'FirstName', sortable: true},
         {key:'LastName', sortable: true},
         {key:'CurrentEmploymentType', sortable: true},
-        {key:'CurrentEmploymentTitle', sortable: true}
+        {key:'CurrentEmploymentTitle', sortable: true},
+        {key: 'Color'}
       ],
       isBusy: true,
       range: {
@@ -281,7 +291,8 @@ export default {
                       FirstName: d.FirstName,
                       LastName: d.LastName,
                       CurrentEmploymentType: d.CurrentEmploymentType,
-                      CurrentEmploymentTitle: d.CurrentEmploymentTitle
+                      CurrentEmploymentTitle: d.CurrentEmploymentTitle,
+                      Color: '#000000'
                     }
                   }).map(JSON.stringify));
                   const uniqueStringsArray = Array.from(uniqueStrings);
