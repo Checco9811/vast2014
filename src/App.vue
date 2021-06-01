@@ -297,7 +297,7 @@ export default {
                   this.refreshMap(dID);
                 })
 
-                //this.ccRecord = ccRecord;
+                this.ccRecord = ccRecord;
               });
         });
 

@@ -2,10 +2,10 @@
   <l-map ref="map" style="height: 500px; weight: 100%;" :zoom="zoom" :center="center" :maxBounds="maxBounds">
     <l-tile-layer :url="url"></l-tile-layer>
     <l-geo-json :geojson="geoJson" :optionsStyle="mapStyle"></l-geo-json>
-    <l-layer-group ref="features">
-    </l-layer-group>
-    <l-layer-group ref="ccRecords">
-    </l-layer-group>
+    <l-geo-json ref="locations" :geojson="locations" :options="options"></l-geo-json>
+    <!-- <l-layer-group ref="locations"></l-layer-group> -->
+    <l-layer-group ref="features"></l-layer-group>
+    <l-layer-group ref="ccRecords"></l-layer-group>
   </l-map>
 </template>
 
@@ -48,7 +48,21 @@ export default {
             [36.09904766316007, 24.91905212402343]]
       ),
       mapStyle: {"color": "grey", "opacity": 0.5},
+      options: {
+        pointToLayer: function (feature, latlng) {
+          return L.circleMarker(latlng, {radius: 10,
+            fillColor: "black",
+            color: "#000",
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.7});
+        },
+        onEachFeature: function onEachFeature(feature, layer) {
+          layer.bindPopup(feature.properties.name, {permanent: true});
+        }
+      },
       geoJson: null,
+      locations: null,
       colors: ['#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928'], // qualitative colors
     }
   },
@@ -66,6 +80,8 @@ export default {
           //Loading locations
           d3.json('location.geojson')
               .then((data) => {
+                this.locations=data;
+                /*var locations = this.$refs.locations.mapObject;
                 L.geoJSON(data, {
                   pointToLayer: function (feature, latlng) {
                     return L.circleMarker(latlng, style(feature));
@@ -73,8 +89,8 @@ export default {
                   onEachFeature: function onEachFeature(feature, layer) {
                     layer.bindPopup(feature.properties.name, {permanent: true});
                   }
-                }).addTo(map);
-
+                }).addTo(locations);
+*/
                 L.control.legend({
                   items: [
                     {color: 'orange', label: 'SpecialGoods'},
@@ -92,6 +108,7 @@ export default {
                   buttonHtml: 'Legend'
                 }).addTo(map);
 
+
                 function getColor(d) {
                   if(specialGoods.includes(d.properties.name))
                     return "#ff7800";
@@ -101,6 +118,7 @@ export default {
                     return "black";
                 }
 
+                /*
                 function style(feature) {
                   return {
                     radius: 10,
@@ -111,7 +129,7 @@ export default {
                     fillOpacity: 0.7
                   };
                 }
-
+                */
               });
         });
   },
@@ -123,23 +141,42 @@ export default {
     },
     ccRecord: {
       handler(newCcRecords){
+        console.log(newCcRecords);
+
+        const ccCounts = d3.rollup(newCcRecords, v => v.length, d => d.location.toLocaleLowerCase());
+        const scaleRadius = d3.scaleSqrt([0, d3.max(ccCounts.values())], [1, 40]);
+
         const specialGoods = new Array("MAXIMUM IRON AND STILL", "Frank's Fuels", "ABILA SCRAP", "PUMP");
         const transportation = ['Abila Airport', 'Port Of Abila'];
 
         var map = this.$refs.map.mapObject;
-        var ccRecordLayer = this.$refs.ccRecords.mapObject;
+        var locationsLayer = this.$refs.locations.mapObject;
 
-        newCcRecords.forEach(d => {
+
+        console.log(locationsLayer);
+        locationsLayer.eachLayer(function(layer) {
+          var value = ccCounts.get(layer.feature.properties.name.toLocaleLowerCase());
+          console.log(value, scaleRadius(value));
+          layer.setRadius(value);
+        });
+
+          //point.setRadius({radius: ccCounts.get(point.location)})
+        //locationsLayer.clearLayers();
+
+        /*
+        locationsLayer.forEach(d => {
           var point = L.circleMarker([d.lat, d.long], style(d.location));
           point.on('mouseover', function(e) {
             L.popup()
                 .setLatLng(e.latlng)
-                .setContent('<h1>'+d.CarID+'</h1>'+d.id + ' ' + d.location)
+                //.setContent('<h1>'+d.CarID+'</h1>'+d.id + ' ' + d.location)
                 .openOn(map);
           });
 
-          point.addTo(ccRecordLayer);
+          point.addTo(locationsLayer);
         });
+
+         */
 
         function getColor(d) {
           if(specialGoods.includes(d))
@@ -169,19 +206,13 @@ export default {
       var tmp = [];
 
       for (var i = 0; i < coordinates.length-1; i++) {
+        tmp.push(coordinates[i]);
         if(coordinates[i+1].Timestamp - coordinates[i].Timestamp > 600000) {
-          if(tmp.length==0){
-            tmp.push(coordinates[i]);
-          }
           result.push(tmp);
           tmp = [];
         }
-        tmp.push(coordinates[i])
       }
-
-      if(result.length == 0) {
-        result.push(tmp);
-      }
+      result.push(tmp);
 
       return result;
     },
@@ -191,7 +222,7 @@ export default {
       var idList = [];
       var dateList = [];
 
-      const trajs = d3.group(coordinates, d => d.id, d => d.Date); // group by id
+      const trajs = d3.group(coordinates, d => d.id, d => d.Date); // group by id and date
       const trs = [];
       Array.from(trajs).map((d) => {
         idList.push(+d[0]);
@@ -213,13 +244,12 @@ export default {
         })
       });
 
-      console.log(trs);
-
       features.clearLayers();
 
       //add to map the new trajectories
       trs.forEach(d => {
         var newTrajs = this.createTrajectories(d.trajs);
+
         console.log(newTrajs);
 
         newTrajs.forEach(dd => {
