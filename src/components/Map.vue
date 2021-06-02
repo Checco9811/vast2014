@@ -98,6 +98,7 @@ export default {
           }).addTo(map);
 
         });
+
   },
   watch: {
     coordinates: {
@@ -133,17 +134,15 @@ export default {
       const ccCounts = d3.rollup(locations, v => v.length, d => d.location.toLocaleLowerCase().replace(/ /g,''));
       const scaleRadius = d3.scaleSqrt([0, d3.max(ccCounts.values())], [5, 20]);
 
-      console.log(ccCounts);
-
       var map = this.$refs.map.mapObject;
       var locationsLayer = this.$refs.locations.mapObject;
 
+      var a = []
       locationsLayer.eachLayer(function (layer) {
         var value = ccCounts.get(layer.feature.properties.name.toLocaleLowerCase().replace(/ /g,''));
-        if (value == null) {
-          console.log(layer.feature.properties.name.toLocaleLowerCase().replace(/ /g,''));
+        a.push({name: layer.feature.properties.name, color: layer.feature.properties.color});
+        if (value == null)
           value = 0;
-        }
 
         layer.setRadius(value != 0 ? scaleRadius(value) : 5);
         layer.on('click', function (e) {
@@ -155,6 +154,8 @@ export default {
         });
 
       });
+
+      console.log(a);
 
     },
     refreshMap(coordinates) {

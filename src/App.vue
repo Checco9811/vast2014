@@ -174,11 +174,6 @@ export default {
         min: 1,
         max: 1440,
       },
-      prettify: function(ts) {
-        var date = new Date(0);
-        date.setSeconds(ts*60);
-        return date.toISOString().substr(11, 5);
-      },
       employmentType:{
         value: [],
         options: ['Executive', 'Other']
@@ -290,7 +285,7 @@ export default {
                       LastName: d.LastName,
                       CurrentEmploymentType: d.CurrentEmploymentType,
                       CurrentEmploymentTitle: d.CurrentEmploymentTitle,
-                      Color: '#000000'
+                      Color: '#000000' //black is the default color
                     }
                   }).map(JSON.stringify));
                   const uniqueStringsArray = Array.from(uniqueStrings);
@@ -369,6 +364,7 @@ export default {
     },
     dates: {
       handler(newDate){
+        console.log(newDate);
         var selectedDates = [];
 
         newDate.value.split(";").forEach(d => selectedDates.push(d.trim()));
