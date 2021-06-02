@@ -99,47 +99,27 @@ export default {
 
         });
   },
-  watch:{
+  watch: {
     coordinates: {
-      handler(newCoordinates){
+      handler(newCoordinates) {
         this.refreshMap(newCoordinates);
       }
     },
     ccRecord: {
-      handler(newCcRecords){
-        const ccCounts = d3.rollup(newCcRecords, v => v.length, d => d.location.toLocaleLowerCase().trim());
-        const scaleRadius = d3.scaleSqrt([0, d3.max(ccCounts.values())], [5, 20]);
-
-        var map = this.$refs.map.mapObject;
-        var locationsLayer = this.$refs.locations.mapObject;
-
-        locationsLayer.eachLayer(function(layer) {
-          var value = ccCounts.get(layer.feature.properties.name.toLocaleLowerCase().trim());
-          if(value == null)
-            value = 0;
-
-          layer.setRadius(scaleRadius(value) == 0 ? scaleRadius(value) : 5);
-          layer.on('click', function(e) {
-            L.popup()
-                .setLatLng(e.latlng)
-                .setContent('<b>' + 'Location' + '</b>' + ': ' +layer.feature.properties.name + '<br/>' +
-                            '<b>' + '#Transactions' + '</b>' + ': '+ value + '<br/>')
-                .openOn(map);
-          });
-
-        });
+      handler(newCcRecords) {
+        this.refreshLocations(newCcRecords);
       }
-    }
+    },
   },
-  methods:{
-    createTrajectories(coordinates){
+  methods: {
+    createTrajectories(coordinates) {
       console.log(coordinates);
       const result = [];
       var tmp = [];
 
-      for (var i = 0; i < coordinates.length-1; i++) {
+      for (var i = 0; i < coordinates.length - 1; i++) {
         tmp.push(coordinates[i]);
-        if(coordinates[i+1].Timestamp - coordinates[i].Timestamp > 600000) {
+        if (coordinates[i + 1].Timestamp - coordinates[i].Timestamp > 600000) {
           result.push(tmp);
           tmp = [];
         }
@@ -149,8 +129,35 @@ export default {
 
       return result;
     },
+    refreshLocations(locations) {
+      const ccCounts = d3.rollup(locations, v => v.length, d => d.location.toLocaleLowerCase().replace(/ /g,''));
+      const scaleRadius = d3.scaleSqrt([0, d3.max(ccCounts.values())], [5, 20]);
+
+      console.log(ccCounts);
+
+      var map = this.$refs.map.mapObject;
+      var locationsLayer = this.$refs.locations.mapObject;
+
+      locationsLayer.eachLayer(function (layer) {
+        var value = ccCounts.get(layer.feature.properties.name.toLocaleLowerCase().replace(/ /g,''));
+        if (value == null) {
+          console.log(layer.feature.properties.name.toLocaleLowerCase().replace(/ /g,''));
+          value = 0;
+        }
+
+        layer.setRadius(value != 0 ? scaleRadius(value) : 5);
+        layer.on('click', function (e) {
+          L.popup()
+              .setLatLng(e.latlng)
+              .setContent('<b>' + 'Location' + '</b>' + ': ' + layer.feature.properties.name + '<br/>' +
+                  '<b>' + '#Transactions' + '</b>' + ': ' + value + '<br/>')
+              .openOn(map);
+        });
+
+      });
+
+    },
     refreshMap(coordinates) {
-      console.log(coordinates);
       const colorMap = coordinates.colors;
       var map = this.$refs.map.mapObject;
       var features = this.$refs.features.mapObject;
@@ -162,7 +169,7 @@ export default {
       Array.from(trajs).map((d) => {
         idList.push(+d[0]);
         var id = d[0];
-        Array.from(d[1]).map( d => {
+        Array.from(d[1]).map(d => {
           dateList.push(d[0]);
           trs.push({
             id: id,
@@ -170,7 +177,7 @@ export default {
             trajs: d[1].sort((a, b) => a.Timestamp - b.Timestamp)
                 .map(p => {
                   return {
-                    p: [ p.lat, p.long],
+                    p: [p.lat, p.long],
                     Timestamp: p.Timestamp
                   }
                 }),
@@ -185,10 +192,9 @@ export default {
         var newTrajs = this.createTrajectories(d.trajs);
 
         console.log(newTrajs);
-        console.log(colorMap.get(d.id)[0].Color);
 
         newTrajs.forEach(dd => {
-          if(dd.length != 0) { // draw only array with more than 1 coordinates
+          if (dd.length != 0) { // draw only array with more than 1 coordinates
             var polyline = L.polyline(dd.map(dd => dd.p),
                 {
                   color: colorMap.get(d.id)[0].Color,
@@ -202,9 +208,9 @@ export default {
             polyline.on('mouseover', function (e) {
               L.popup()
                   .setLatLng(e.latlng)
-                  .setContent('<b>' + 'CarId' + '</b>' + ': ' +d.id + '<br/>' +
-                              '<b>' + 'Start' + '</b>' + ': '+ preprocessing.formatDate(dd[0].Timestamp) + '<br/>' +
-                              '<b>' + 'Stop' + '</b>' + ': '+ preprocessing.formatDate(dd[dd.length - 1].Timestamp) + '<br/>')
+                  .setContent('<b>' + 'CarId' + '</b>' + ': ' + d.id + '<br/>' +
+                      '<b>' + 'Start' + '</b>' + ': ' + preprocessing.formatDate(dd[0].Timestamp) + '<br/>' +
+                      '<b>' + 'Stop' + '</b>' + ': ' + preprocessing.formatDate(dd[dd.length - 1].Timestamp) + '<br/>')
                   .openOn(map);
             });
 
@@ -218,13 +224,13 @@ export default {
             });
 
             /*
-            startPoint.on('mouseover', function (e) {
-              L.popup()
-                  .setLatLng(e.latlng)
-                  .setContent('Start: ' + dd[0].Timestamp.toISOString())
-                  .openOn(map);
-            });
-            */
+          startPoint.on('mouseover', function (e) {
+            L.popup()
+                .setLatLng(e.latlng)
+                .setContent('Start: ' + dd[0].Timestamp.toISOString())
+                .openOn(map);
+          });
+          */
 
             var endPoint = L.circleMarker(dd[dd.length - 1].p, {
               radius: 2,
@@ -236,12 +242,12 @@ export default {
             });
 
             /*endPoint.on('mouseover', function (e) {
-              L.popup()
-                  .setLatLng(e.latlng)
-                  .setContent('End: ' + dd[dd.length - 1].Timestamp.toISOString())
-                  .openOn(map);
-            });
-             */
+            L.popup()
+                .setLatLng(e.latlng)
+                .setContent('End: ' + dd[dd.length - 1].Timestamp.toISOString())
+                .openOn(map);
+          });
+           */
 
             startPoint.addTo(features);
             endPoint.addTo(features);
@@ -252,6 +258,7 @@ export default {
 
     }
   }
+
 
 }
 </script>
