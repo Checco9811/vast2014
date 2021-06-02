@@ -87,11 +87,8 @@
         <b-col>
           <h5>Credit Card Transactions</h5>
           <div style="height:250px">
-            <Chart :cf-aggregation="dataEmploymentType"></Chart>
+            <Chart :cf-aggregation="dataBarChart"></Chart>
           </div>
-        </b-col>
-        <b-col>
-          <Chart></Chart>
         </b-col>
       </b-row>
 
@@ -178,7 +175,7 @@ export default {
         value: [],
         options: ['Executive', 'Other']
       },
-      dataEmploymentType:[]
+      dataBarChart:[]
     };
   },
   mounted(){
@@ -217,7 +214,7 @@ export default {
           dDate = cf.dimension(d => d.Date);
           dMinutes = cf.dimension(d => d.Minutes);
 
-          d3.csv('cc_data_joined.csv')
+          d3.csv('cc_data_joined_test.csv')
               .then((data) => {
                 const ccRecord = data.map((d) => {
                   const timestamp = new Date(d.timestamp);
@@ -233,7 +230,8 @@ export default {
                     FirstName: d.FirstName,
                     LastName: d.LastName,
                     price: d.price,
-                    location: d.location
+                    location: d.location,
+                    Category: d.Category
                   }
 
                   return r;
@@ -254,6 +252,7 @@ export default {
                     return {
                       Timestamp: cc.Timestamp,
                       Date: cc.Date,
+                      Category: cc.Category,
                       Minutes: cc.Minutes,
                       CarID: car.CarID,
                       FirstName: car.FirstName,
@@ -339,8 +338,8 @@ export default {
         i++;
       })
     },
-    refreshCharts(){
-      this.dataEmploymentType = dEmplTypeCc.group().reduceCount().all();
+    refreshCharts(cfDimension){
+      this.dataBarChart = cfDimension.top(Infinity);
     },
     refreshHistogramSlider(){
       // ignoring the dMinutes dimension for the histogram slider
@@ -356,7 +355,7 @@ export default {
         dID.filter(d => selectedIDs.indexOf(d) > -1);
         dIDCc.filter(d => selectedIDs.indexOf(d) > -1);
 
-        this.refreshCharts();
+        this.refreshCharts(dIDCc);
         this.refreshMap(dID, dIDCc);
         this.refreshHistogramSlider();
       },
@@ -371,7 +370,7 @@ export default {
         dDate.filter(d => selectedDates.indexOf(d) > -1);
         dDateCc.filter(d => selectedDates.indexOf(d) > -1);
 
-        this.refreshCharts();
+        this.refreshCharts(dDateCc);
         this.refreshMap(dDate, dDateCc);
         this.refreshHistogramSlider();
       },
@@ -385,7 +384,7 @@ export default {
           dEmplType.filter(d => selectedTypes.indexOf(d) > -1);
           dEmplTypeCc.filter(d => selectedTypes.indexOf(d) > -1);
 
-          this.refreshCharts();
+          this.refreshCharts(dEmplTypeCc);
           this.refreshMap(dEmplType, dEmplTypeCc);
           this.refreshHistogramSlider();
         }else{
@@ -406,7 +405,7 @@ export default {
           return d >= newRange.min && d <= newRange.max;
         });
 
-        this.refreshCharts();
+        this.refreshCharts(dMinutesCc);
         this.refreshMap(dMinutes, dMinutesCc);
       }
     }
