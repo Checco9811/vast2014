@@ -3,7 +3,6 @@
     <l-tile-layer :url="url"></l-tile-layer>
     <l-geo-json :geojson="geoJson" :optionsStyle="mapStyle"></l-geo-json>
     <l-geo-json ref="locations" :geojson="locations" :options="options"></l-geo-json>
-    <!-- <l-layer-group ref="locations"></l-layer-group> -->
     <l-layer-group ref="features"></l-layer-group>
     <l-layer-group ref="ccRecords"></l-layer-group>
   </l-map>
@@ -26,8 +25,8 @@ export default {
   },
   props:{
     coordinates:{
-      type: Array,
-      default:() => ([])
+      type: Object,
+      default:() => ({})
     },
     ccRecord:{
       type: Array,
@@ -151,12 +150,14 @@ export default {
       return result;
     },
     refreshMap(coordinates) {
+      console.log(coordinates);
+      const colorMap = coordinates.colors;
       var map = this.$refs.map.mapObject;
       var features = this.$refs.features.mapObject;
       var idList = [];
       var dateList = [];
 
-      const trajs = d3.group(coordinates, d => d.id, d => d.Date); // group by id and date
+      const trajs = d3.group(coordinates.points, d => d.id, d => d.Date); // group by id and date
       const trs = [];
       Array.from(trajs).map((d) => {
         idList.push(+d[0]);
@@ -184,12 +185,13 @@ export default {
         var newTrajs = this.createTrajectories(d.trajs);
 
         console.log(newTrajs);
+        console.log(colorMap.get(d.id)[0].Color);
 
         newTrajs.forEach(dd => {
           if(dd.length != 0) { // draw only array with more than 1 coordinates
             var polyline = L.polyline(dd.map(dd => dd.p),
                 {
-                  color: 'black',
+                  color: colorMap.get(d.id)[0].Color,
                   weight: 2,
                   smoothFactor: 3,
                   opacity: 0.4,
@@ -206,7 +208,14 @@ export default {
                   .openOn(map);
             });
 
-            var startPoint = L.circleMarker(dd[0].p, style());
+            var startPoint = L.circleMarker(dd[0].p, {
+              radius: 2,
+              fillColor: colorMap.get(d.id)[0].Color,
+              color: "#000",
+              weight: 1,
+              opacity: 1,
+              fillOpacity: 0.7
+            });
 
             /*
             startPoint.on('mouseover', function (e) {
@@ -217,7 +226,14 @@ export default {
             });
             */
 
-            var endPoint = L.circleMarker(dd[dd.length - 1].p, style());
+            var endPoint = L.circleMarker(dd[dd.length - 1].p, {
+              radius: 2,
+              fillColor: colorMap.get(d.id)[0].Color,
+              color: "#000",
+              weight: 1,
+              opacity: 1,
+              fillOpacity: 0.7
+            });
 
             /*endPoint.on('mouseover', function (e) {
               L.popup()
@@ -233,17 +249,6 @@ export default {
           }
         })
       });
-
-      function style() {
-        return {
-          radius: 2.5,
-          fillColor: 'black',
-          color: "#000",
-          weight: 1,
-          opacity: 1,
-          fillOpacity: 0.7
-        };
-      }
 
     }
   }

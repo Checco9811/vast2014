@@ -148,7 +148,7 @@ export default {
   data () {
     return {
       color: '',
-      coordinates: [],
+      coordinates: {},
       employees: {
         value: [],
         options: []
@@ -313,7 +313,10 @@ export default {
   },
   methods: {
     refreshMap(cfDimension1, cfDimension2) {
-      this.coordinates = cfDimension1.top(Infinity);
+      this.coordinates = {
+        points: cfDimension1.top(Infinity),
+        colors: d3.group(this.employees.value, d => d.CarID)
+      };
       this.ccRecord = cfDimension2.top(Infinity);
     },
     onRowSelected(items) {
