@@ -224,7 +224,7 @@ export default {
           dDate = cf.dimension(d => d.Date);
           dMinutes = cf.dimension(d => d.Minutes);
 
-          d3.csv('cc_data_processed.csv')
+          d3.csv('cc_data_joined.csv')
               .then((data) => {
                 const ccRecord = data.map((d) => {
                   const timestamp = new Date(d.timestamp);
