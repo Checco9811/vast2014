@@ -82,15 +82,15 @@ export default {
 
           L.control.legend({
             items: [
-              {color: 'orange', label: 'SpecialGoods'},
-              {color: 'red', label: 'transportation'},
-              {color: 'brown', label: 'GAStech'},
-              {color: 'grey', label: 'Unknown'},
-              {color: 'blue', label: 'Shop'},
-              {color: 'green', label: 'Park'},
-              {color: 'violet', label: 'Restaurant'},
-              {color: 'pink', label: 'SpecialMeeting'},
-              {color: 'yellow', label: 'Uncertain'},
+              {color: '#ff7f00', label: 'SpecialGoods'}, //orange
+              {color: '#e41a1c', label: 'transportation'}, //red
+              {color: '#a65628', label: 'GAStech'}, //brown
+              {color: '#999999', label: 'Unknown'}, //grey
+              {color: '#377eb8', label: 'Shop'}, //blue
+              {color: '#4daf4a', label: 'Park'}, //green
+              {color: '#984ea3', label: 'Restaurant'}, //violet
+              {color: '#f781bf', label: 'SpecialMeeting'}, //pink
+              {color: '#ffff33', label: 'Uncertain'}, //yellow
             ],
             collapsed: false,
             position: 'topright',

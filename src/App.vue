@@ -34,9 +34,7 @@
               </template>
 
               <template v-slot:cell(Color)="row">
-
-                <v-swatches @click.native.stop v-model="row.item.Color" popover-x="left"></v-swatches>
-
+                <v-swatches @click.native.stop v-model="row.item.Color" :swatches="colors" popover-x="left"></v-swatches>
               </template>
 
             </b-table>
@@ -147,7 +145,7 @@ export default {
   },
   data () {
     return {
-      color: '',
+      colors: ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928','#000000'],
       coordinates: {},
       employees: {
         value: [],
