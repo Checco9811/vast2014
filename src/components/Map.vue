@@ -43,9 +43,15 @@ export default {
             [36.09904766316007, 24.91905212402343]]
       ),
       maxBounds: latLngBounds(
+          [[36.02799998329553,24.74258422851562],
+            [36.110143066608245,24.9664306640625]]
+      ),
+      /*
+      maxBounds: latLngBounds(
           [[36.03771731908686, 24.793739318847656],
             [36.09904766316007, 24.91905212402343]]
       ),
+       */
       mapStyle: {"color": "grey", "opacity": 0.5},
       options: {
         pointToLayer: function (feature, latlng) {
@@ -201,7 +207,7 @@ export default {
                   color: colorMap.get(d.id)[0].Color,
                   weight: 2,
                   smoothFactor: 3,
-                  opacity: 0.4,
+                  opacity: colorMap.get(d.id)[0].Color == '#000000' ? 0.4 : 1,
                   id: d.id,
                   Date: d.Date
                 });

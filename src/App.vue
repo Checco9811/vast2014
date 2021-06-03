@@ -61,9 +61,9 @@
 
           <b-row>
             <b-col>
-              <h5>Date selector</h5>
+              <h5>Select dates</h5>
               <datepicker
-                  placeholder="Select Dates"
+                  placeholder=""
                   v-model="dates.value"
                   :options="dates.options"></datepicker>
             </b-col>
@@ -295,7 +295,6 @@ export default {
                   this.dates.value = '2014-01-06';
                   this.range = {min:0, max:0};
 
-                  this.refreshCharts();
                   this.refreshMap(dID, dIDCc);
                 })
               });
@@ -337,11 +336,6 @@ export default {
         i++;
       })
     },
-    /*
-    refreshCharts(cfDimension){
-      this.dataBarChart = cfDimension.top(Infinity);
-    },
-     */
     refreshHistogramSlider(){
       // ignoring the dMinutes dimension for the histogram slider
       histogramSlider.data(cf.allFiltered([dMinutes]).map(d => d.Minutes));
@@ -356,7 +350,6 @@ export default {
         dID.filter(d => selectedIDs.indexOf(d) > -1);
         dIDCc.filter(d => selectedIDs.indexOf(d) > -1);
 
-        //this.refreshCharts(dIDCc);
         this.refreshMap(dID, dIDCc);
         this.refreshHistogramSlider();
       },
@@ -371,7 +364,6 @@ export default {
         dDate.filter(d => selectedDates.indexOf(d) > -1);
         dDateCc.filter(d => selectedDates.indexOf(d) > -1);
 
-        //this.refreshCharts(dDateCc);
         this.refreshMap(dDate, dDateCc);
         this.refreshHistogramSlider();
       },
@@ -385,7 +377,6 @@ export default {
           dEmplType.filter(d => selectedTypes.indexOf(d) > -1);
           dEmplTypeCc.filter(d => selectedTypes.indexOf(d) > -1);
 
-          //this.refreshCharts(dEmplTypeCc);
           this.refreshMap(dEmplType, dEmplTypeCc);
           this.refreshHistogramSlider();
         }else{
@@ -406,7 +397,6 @@ export default {
           return d >= newRange.min && d <= newRange.max;
         });
 
-        //this.refreshCharts(dMinutesCc);
         this.refreshMap(dMinutes, dMinutesCc);
       }
     }
@@ -428,7 +418,7 @@ export default {
 }
 
 #CarIDs{
-  font-size: 12px;
+  font-size: 8px;
 }
 
 b-table{

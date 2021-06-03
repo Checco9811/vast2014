@@ -26,6 +26,7 @@ export default {
             data: [
               {
                 timeRange: [600, 605],
+                val: "Restaurant"
               }
             ]
           }
@@ -63,6 +64,7 @@ export default {
     cfAggregation(datum) {
 
       console.log(datum);
+
       var group = Array.from(d3.group(datum, d => d.CarID, d => d.Date));
 
       var result = group.map(d => {
