@@ -1,58 +1,90 @@
 <template>
-  <div id="barChart"></div>
+  <div id="chart"></div>
 </template>
 
 <script>
 const d3 = require('d3');
-import barchart from "@/assets/js/HierarchicalBarChart";
-import preprocessing from "@/assets/js/preprocessing";
+import TimelinesChart from 'timelines-chart';
 
-const barChart = barchart();
+const myChart = TimelinesChart();
 
 export default {
   name: "Chart",
-  components:{
-  },
-  props:{
-    cfAggregation:{
+  components: {},
+  props: {
+    cfAggregation: {
       type: Array
     }
   },
-  data(){
-    return {
-
-    }
+  data() {
+    return {}
 
   },
-  mounted(){
-    d3.select("#barChart").call(barChart);
-  },
-  watch:{
-    cfAggregation(datum){
-      if(datum.length > 0 ) {
+  mounted() {
 
-        var tmp = Array.from(d3.rollup(datum, v => v.length, d => d.Category, d => d.location))
-        var result = []
-        tmp.map(d => {
-          var t = d[0];
-          Array.from(d[1]).map(dd => {
-            result.push({
-              Category: t,
-              location: dd[0],
-              count: dd[1]
-            })
+    const formatMinutes = function (d) {
+      var hours = Math.floor(d / 60),
+          minutes = Math.floor(d - hours * 60);
+
+      if (hours <= 12)
+        return hours + ":" + minutes + ' AM';
+      else
+        return hours - 12 + ":" + minutes + ' PM';
+    };
+
+    const colorScale = d3.scaleOrdinal(["SpecialGoods", "transportation", "Unknown", "Shop", "Park", "Restaurant", "SpecialMeeting", "Uncertain"],
+                              ["#ff7f00", "#e41a1c", "#999999", "#377eb8", "#4daf4a", "#984ea3", "#f781bf", "#ffff33"]);
+
+    myChart
+        .width(1000)
+        .xTickFormat(n => formatMinutes(+n))
+        .timeFormat('%Q')
+        //.data([])
+        .zoomX([1, 1440])
+        .zQualitative(true)
+        .zColorScale(colorScale)(document.getElementById('chart'));
+
+  },
+  watch: {
+    cfAggregation(datum) {
+
+      var group = Array.from(d3.group(datum, d => d.CarID, d => d.Date));
+
+      var result = group.map(d => {
+        return {
+          group: d[0]+"",
+          data: Array.from(d[1]).map(dd => {
+            console.log(dd)
+            return {
+              label: dd[0],
+              data: dd[1].map(ddd => {
+                return {
+                  timeRange: [ddd.Minutes, ddd.Minutes+10],
+                  val: ddd.Category,
+                  price: ddd.price,
+                  location: ddd.location
+                }
+              })
+            }
           })
-        })
+        }
+      })
 
-        const root = preprocessing.fromFlatToHierarchy(result, ["Category", "location"]);
-        const hierarchy = d3.hierarchy(root)
-            .sum(d => d.value)
-            .sort((a, b) => b.value - a.value)
+      console.log(result)
 
-        barChart.data(hierarchy);
-      }
+      myChart
+          .data(result)
+          .zoomX([1, 1440])
+          .segmentTooltipContent(d => {
+            console.log(d)
+            return "<p>" + "Price: " + d.data.price + "</p></br>" +
+                    "<p>" + "Location: " + d.data.location + "</p></br>" +
+                    "<p>" + "Category: " + d.data.val + "</p></br>";
+
+          });
     }
   }
+
 }
 </script>
 

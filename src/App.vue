@@ -221,7 +221,7 @@ export default {
                   const yyyymmdd = timestamp.toISOString().split("T")[0];
                   const hhmmss = timestamp.toISOString().split("T")[1].split(".")[0];
                   const r = {
-                    Timestamp: timestamp,
+                    Timestamp: +timestamp,
                     Date: yyyymmdd,
                     Minutes: moment.duration(hhmmss).asMinutes(),
                     id: +d.CarID,
