@@ -17,7 +17,21 @@ export default {
     }
   },
   data() {
-    return {}
+    return {
+      data: [{
+        group: "35",
+        data: [
+          {
+            label: "2014-01-06",
+            data: [
+              {
+                timeRange: [600, 605],
+              }
+            ]
+          }
+        ]
+      }]
+    }
 
   },
   mounted() {
@@ -39,7 +53,7 @@ export default {
         .width(1000)
         .xTickFormat(n => formatMinutes(+n))
         .timeFormat('%Q')
-        //.data([])
+        .data(this.data)
         .zoomX([1, 1440])
         .zQualitative(true)
         .zColorScale(colorScale)(document.getElementById('chart'));
@@ -48,6 +62,7 @@ export default {
   watch: {
     cfAggregation(datum) {
 
+      console.log(datum);
       var group = Array.from(d3.group(datum, d => d.CarID, d => d.Date));
 
       var result = group.map(d => {

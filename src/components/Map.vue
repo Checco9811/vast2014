@@ -60,7 +60,7 @@ export default {
         onEachFeature: function onEachFeature(feature, layer) {
           layer.bindPopup('<b>' + 'Location' + '</b>' + ': ' +feature.properties.name + '<br/>' +
                           '<b>' + '#Transactions' + '</b>' + ': 0' + '<br/>'
-                      , {permanent: true});
+                      , {closeOnClick: false, autoClose: false});
         }
       },
       geoJson: null,
@@ -206,8 +206,8 @@ export default {
                   Date: d.Date
                 });
 
-            polyline.on('mouseover', function (e) {
-              L.popup()
+            polyline.on('click', function (e) {
+              L.popup({closeOnClick: false, autoClose: false})
                   .setLatLng(e.latlng)
                   .setContent('<b>' + 'CarId' + '</b>' + ': ' + d.id + '<br/>' +
                       '<b>' + 'Start' + '</b>' + ': ' + preprocessing.formatDate(dd[0].Timestamp) + '<br/>' +
