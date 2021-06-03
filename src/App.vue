@@ -87,7 +87,7 @@
         <b-col>
           <h5>Credit Card Transactions</h5>
           <div style="height:250px">
-            <Chart :cf-aggregation="dataBarChart"></Chart>
+            <Timeline :cf-aggregation="ccRecord"></Timeline>
           </div>
         </b-col>
       </b-row>
@@ -108,7 +108,7 @@
 <script>
 
 import Map from '@/components/Map';
-import Chart from "@/components/Chart";
+import Timeline from "@/components/Timeline";
 import VSwatches from 'vue-swatches'
 import crossfilter from 'crossfilter2';
 import moment from 'moment';
@@ -137,7 +137,7 @@ export default {
   name: 'App',
   components: {
     VSwatches,
-    Chart,
+    Timeline,
     Map
   },
   data () {
@@ -174,8 +174,7 @@ export default {
       employmentType:{
         value: [],
         options: ['Executive', 'Other']
-      },
-      dataBarChart:[]
+      }
     };
   },
   mounted(){
@@ -338,9 +337,11 @@ export default {
         i++;
       })
     },
+    /*
     refreshCharts(cfDimension){
       this.dataBarChart = cfDimension.top(Infinity);
     },
+     */
     refreshHistogramSlider(){
       // ignoring the dMinutes dimension for the histogram slider
       histogramSlider.data(cf.allFiltered([dMinutes]).map(d => d.Minutes));
@@ -355,7 +356,7 @@ export default {
         dID.filter(d => selectedIDs.indexOf(d) > -1);
         dIDCc.filter(d => selectedIDs.indexOf(d) > -1);
 
-        this.refreshCharts(dIDCc);
+        //this.refreshCharts(dIDCc);
         this.refreshMap(dID, dIDCc);
         this.refreshHistogramSlider();
       },
@@ -370,7 +371,7 @@ export default {
         dDate.filter(d => selectedDates.indexOf(d) > -1);
         dDateCc.filter(d => selectedDates.indexOf(d) > -1);
 
-        this.refreshCharts(dDateCc);
+        //this.refreshCharts(dDateCc);
         this.refreshMap(dDate, dDateCc);
         this.refreshHistogramSlider();
       },
@@ -384,7 +385,7 @@ export default {
           dEmplType.filter(d => selectedTypes.indexOf(d) > -1);
           dEmplTypeCc.filter(d => selectedTypes.indexOf(d) > -1);
 
-          this.refreshCharts(dEmplTypeCc);
+          //this.refreshCharts(dEmplTypeCc);
           this.refreshMap(dEmplType, dEmplTypeCc);
           this.refreshHistogramSlider();
         }else{
@@ -405,7 +406,7 @@ export default {
           return d >= newRange.min && d <= newRange.max;
         });
 
-        this.refreshCharts(dMinutesCc);
+        //this.refreshCharts(dMinutesCc);
         this.refreshMap(dMinutes, dMinutesCc);
       }
     }

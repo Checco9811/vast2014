@@ -9,7 +9,7 @@ import TimelinesChart from 'timelines-chart';
 const myChart = TimelinesChart();
 
 export default {
-  name: "Chart",
+  name: "Timeline",
   components: {},
   props: {
     cfAggregation: {

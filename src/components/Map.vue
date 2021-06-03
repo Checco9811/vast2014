@@ -60,7 +60,7 @@ export default {
         onEachFeature: function onEachFeature(feature, layer) {
           layer.bindPopup('<b>' + 'Location' + '</b>' + ': ' +feature.properties.name + '<br/>' +
                           '<b>' + '#Transactions' + '</b>' + ': 0' + '<br/>'
-                      , {closeOnClick: false, autoClose: false});
+                      , {closeOnClick: false, autoClose: false, className: "popupStyle"});
         }
       },
       geoJson: null,
@@ -265,5 +265,26 @@ export default {
 </script>
 
 <style scoped>
+
+/*another-popop style*/
+.popupStyle .leaflet-popup-content-wrapper {
+  background: #2ce897;
+  color: #eee;
+  font-size: 12px;
+  line-height: 24px;
+  border-radius: 0px;
+}
+.popupStyle .leaflet-popup-content-wrapper a {
+  color: rgba(200, 200, 200, 0.1);
+}
+.popupStyle .leaflet-popup-tip-container {
+  width: 50px;
+  height: 15px;
+}
+.popupStyle .leaflet-popup-tip {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
 
 </style>
