@@ -85,19 +85,11 @@
 
       <b-row>
         <b-col>
-          <h5>Credit Card Transactions</h5>
+          <h5 style="text-align: center">Credit Card Transactions</h5>
           <div style="height:250px">
             <Timeline :cf-aggregation="ccRecord"></Timeline>
           </div>
         </b-col>
-      </b-row>
-
-      <b-row class="description">
-        <p>...</p>
-        <p>
-          <b-link @click="setEmploymentType('Executive')">Executive</b-link>
-        </p>
-        <p></p>
       </b-row>
 
     </b-container>
@@ -157,7 +149,7 @@ export default {
         },
         value: ''
       },
-      ccRecord: [],
+      ccRecord: {},
       fields: [
         {key:'CarID', sortable: true},
         {key:'FirstName', sortable: true},
@@ -307,7 +299,10 @@ export default {
         points: cfDimension1.top(Infinity),
         colors: d3.group(this.employees.value, d => d.CarID)
       };
-      this.ccRecord = cfDimension2.top(Infinity);
+      this.ccRecord = {
+        transactions: cfDimension2.top(Infinity),
+        range: this.range
+      }
     },
     onRowSelected(items) {
       this.employees.value = items

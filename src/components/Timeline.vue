@@ -6,14 +6,25 @@
 const d3 = require('d3');
 import TimelinesChart from 'timelines-chart';
 
+// timeline component
 const myChart = TimelinesChart();
+
+const formatMinutes = function (d) {
+  var hours = Math.floor(d / 60),
+      minutes = Math.floor(d - hours * 60);
+
+  if (hours <= 12)
+    return hours + ":" + minutes + ' AM';
+  else
+    return hours - 12 + ":" + minutes + ' PM';
+};
 
 export default {
   name: "Timeline",
   components: {},
   props: {
     cfAggregation: {
-      type: Array
+      type: Object
     }
   },
   data() {
@@ -37,16 +48,6 @@ export default {
   },
   mounted() {
 
-    const formatMinutes = function (d) {
-      var hours = Math.floor(d / 60),
-          minutes = Math.floor(d - hours * 60);
-
-      if (hours <= 12)
-        return hours + ":" + minutes + ' AM';
-      else
-        return hours - 12 + ":" + minutes + ' PM';
-    };
-
     const colorScale = d3.scaleOrdinal(["SpecialGoods", "transportation", "Unknown", "Shop", "Park", "Restaurant", "SpecialMeeting", "Uncertain"],
                               ["#ff7f00", "#e41a1c", "#999999", "#377eb8", "#4daf4a", "#984ea3", "#f781bf", "#ffff33"]);
 
@@ -62,10 +63,9 @@ export default {
   },
   watch: {
     cfAggregation(datum) {
-
       console.log(datum);
 
-      var group = Array.from(d3.group(datum, d => d.CarID, d => d.Date));
+      var group = Array.from(d3.group(datum.transactions, d => d.CarID, d => d.Date));
 
       var result = group.map(d => {
         return {
@@ -87,16 +87,16 @@ export default {
         }
       })
 
-      console.log(result)
+      console.log(result, datum.range)
 
       myChart
           .data(result)
-          .zoomX([1, 1440])
+          .zoomX(datum.range.min != null && datum.range.max != null ? [datum.range.min, datum.range.max] : [1,1440])
           .segmentTooltipContent(d => {
             console.log(d)
-            return "<p>" + "Price: " + d.data.price + "</p></br>" +
-                    "<p>" + "Location: " + d.data.location + "</p></br>" +
-                    "<p>" + "Category: " + d.data.val + "</p></br>";
+            return "<p>" +  "Ora: " + formatMinutes(d.data.timeRange[0]) + "</p></br>" +
+                    "<p>" + "Price: " + d.data.price + "</p></br>" +
+                    "<p>" + "Location: " + d.data.location + "</p>";
 
           });
     }

@@ -29,8 +29,8 @@ export default {
       default:() => ({})
     },
     ccRecord:{
-      type: Array,
-      default:() => ([])
+      type: Object,
+      default:() => ({})
     }
   },
   data () {
@@ -66,7 +66,7 @@ export default {
         onEachFeature: function onEachFeature(feature, layer) {
           layer.bindPopup('<b>' + 'Location' + '</b>' + ': ' +feature.properties.name + '<br/>' +
                           '<b>' + '#Transactions' + '</b>' + ': 0' + '<br/>'
-                      , {closeOnClick: false, autoClose: false, className: "popupStyle"});
+                      , {closeOnClick: false, autoClose: false});
         }
       },
       geoJson: null,
@@ -137,31 +137,22 @@ export default {
       return result;
     },
     refreshLocations(locations) {
-      const ccCounts = d3.rollup(locations, v => v.length, d => d.location.toLocaleLowerCase().replace(/ /g,''));
+      const ccCounts = d3.rollup(locations.transactions, v => v.length, d => d.location.toLocaleLowerCase().replace(/ /g,''));
       const scaleRadius = d3.scaleSqrt([0, d3.max(ccCounts.values())], [5, 20]);
 
-      var map = this.$refs.map.mapObject;
+      //var map = this.$refs.map.mapObject;
       var locationsLayer = this.$refs.locations.mapObject;
 
-      var a = []
       locationsLayer.eachLayer(function (layer) {
         var value = ccCounts.get(layer.feature.properties.name.toLocaleLowerCase().replace(/ /g,''));
-        a.push({name: layer.feature.properties.name, color: layer.feature.properties.color});
+
         if (value == null)
           value = 0;
 
         layer.setRadius(value != 0 ? scaleRadius(value) : 5);
-        layer.on('click', function (e) {
-          L.popup()
-              .setLatLng(e.latlng)
-              .setContent('<b>' + 'Location' + '</b>' + ': ' + layer.feature.properties.name + '<br/>' +
-                  '<b>' + '#Transactions' + '</b>' + ': ' + value + '<br/>')
-              .openOn(map);
-        });
-
+        layer.setPopupContent('<b>' + 'Location' + '</b>' + ': ' + layer.feature.properties.name + '<br/>' +
+                              '<b>' + '#Transactions' + '</b>' + ': ' + value + '<br/>')
       });
-
-      console.log(a);
 
     },
     refreshMap(coordinates) {
