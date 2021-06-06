@@ -30,14 +30,16 @@ export default {
   data() {
     return {
       data: [{
-        group: "35",
+        group: " ",
         data: [
           {
-            label: "2014-01-06",
+            label: " ",
             data: [
               {
-                timeRange: [600, 605],
-                val: "Restaurant"
+                timeRange: [1, 1]
+              },
+              {
+                timeRange: [1440, 1440]
               }
             ]
           }
@@ -90,10 +92,9 @@ export default {
       console.log(result, datum.range)
 
       myChart
-          .data(result)
+          .data(result.length == 0? this.data : result)
           .zoomX(datum.range.min != null && datum.range.max != null ? [datum.range.min, datum.range.max] : [1,1440])
           .segmentTooltipContent(d => {
-            console.log(d)
             return "<p>" +  "Ora: " + formatMinutes(d.data.timeRange[0]) + "</p></br>" +
                     "<p>" + "Price: " + d.data.price + "</p></br>" +
                     "<p>" + "Location: " + d.data.location + "</p>";

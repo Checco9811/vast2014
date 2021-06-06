@@ -18,7 +18,7 @@
             <b-table
                 id="CarIDs"
                 :busy="isBusy"
-                :items="employees.options"
+                :items="employeesOptions"
                 :fields="fields"
                 :select-mode="'multi'"
                 responsive="sm"
@@ -49,8 +49,8 @@
             <b-col>
               <b-form-group label="Select Employment Type">
                 <b-form-checkbox-group
-                    v-model="employmentType.value"
-                    :options="employmentType.options"
+                    v-model="employmentTypeValue"
+                    :options="employmentTypeOptions"
                     name="buttonsEmploymentType"
                     size="sm"
                     buttons
@@ -106,7 +106,6 @@ import crossfilter from 'crossfilter2';
 import moment from 'moment';
 import histogram from "@/assets/js/histogramSlider";
 
-const preprocessing = require('@/assets/js/preprocessing')
 const d3 = require('d3');
 
 // histogram slider
@@ -136,10 +135,8 @@ export default {
     return {
       colors: ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928','#000000'],
       coordinates: {},
-      employees: {
-        value: [],
-        options: []
-      },
+      employeesValue: [],
+      employeesOptions: [],
       dates: {
         options:{
           mode: 'multiple',
@@ -163,10 +160,8 @@ export default {
         min: 1,
         max: 1440,
       },
-      employmentType:{
-        value: [],
-        options: ['Executive', 'Other']
-      }
+      employmentTypeValue: [],
+      employmentTypeOptions: ['Executive', 'Other']
     };
   },
   mounted(){
@@ -178,126 +173,109 @@ export default {
       this.range = {min: range[0], max: range[1]}
     })
 
-    d3.csv('gps-joined.csv')
+    d3.csv('car-assignments.csv').then((data) => {
+      const carAssignments = data.map((d) => {
+        return {
+          CarID: +d.CarID,
+          FirstName: d.FirstName,
+          LastName: d.LastName,
+          CurrentEmploymentType: d.CurrentEmploymentType,
+          CurrentEmploymentTitle: d.CurrentEmploymentTitle
+        }
+      })
+
+      //finding unique values for the options
+      this.employmentTypeOptions = Array.from(new Set(carAssignments.map(d => d.CurrentEmploymentType)));
+
+      const uniqueStrings = new Set(carAssignments.map(d => {
+        return {
+          CarID: d.CarID,
+          FirstName: d.FirstName,
+          LastName: d.LastName,
+          CurrentEmploymentType: d.CurrentEmploymentType,
+          CurrentEmploymentTitle: d.CurrentEmploymentTitle,
+          Color: '#000000' //black is the default color
+        }
+      }).map(JSON.stringify));
+      const uniqueStringsArray = Array.from(uniqueStrings);
+      this.employeesOptions = uniqueStringsArray.map(JSON.parse);
+
+    })
+
+
+    d3.csv('cc_data_joined.csv')
         .then((data) => {
-          const gpsRecord = data.map((d) => {
-            const timestamp = new Date(d.Timestamp);
+          const ccRecord = data.map((d) => {
+            const timestamp = new Date(d.timestamp);
             const yyyymmdd = timestamp.toISOString().split("T")[0];
             const hhmmss = timestamp.toISOString().split("T")[1].split(".")[0];
             const r = {
-              Timestamp: timestamp,
+              Timestamp: +timestamp,
               Date: yyyymmdd,
               Minutes: moment.duration(hhmmss).asMinutes(),
-              id: +d.id,
+              CarID: +d.CarID,
               lat: +d.lat,
               long: +d.long,
               FirstName: d.FirstName,
               LastName: d.LastName,
-              CurrentEmploymentType: d.CurrentEmploymentType,
-              CurrentEmploymentTitle: d.CurrentEmploymentTitle
-            };
+              price: d.price,
+              location: d.location,
+              Category: d.Category
+            }
+
             return r;
           });
 
-          cf = crossfilter(gpsRecord);
-          dID = cf.dimension(d => d.id);
-          dEmplType = cf.dimension(d => d.CurrentEmploymentType);
-          dDate = cf.dimension(d => d.Date);
-          dMinutes = cf.dimension(d => d.Minutes);
+          cf2 = crossfilter(ccRecord);
+          dIDCc = cf2.dimension(d => d.CarID);
+          dEmplTypeCc = cf2.dimension(d => d.CurrentEmploymentType);
+          dDateCc = cf2.dimension(d => d.Date);
+          dMinutesCc = cf2.dimension(d => d.Minutes);
 
-          d3.csv('cc_data_joined_test.csv')
+          d3.csv('gps-joined.csv')
               .then((data) => {
-                const ccRecord = data.map((d) => {
-                  const timestamp = new Date(d.timestamp);
+                const gpsRecord = data.map((d) => {
+                  const timestamp = new Date(d.Timestamp);
                   const yyyymmdd = timestamp.toISOString().split("T")[0];
                   const hhmmss = timestamp.toISOString().split("T")[1].split(".")[0];
                   const r = {
-                    Timestamp: +timestamp,
+                    Timestamp: timestamp,
                     Date: yyyymmdd,
                     Minutes: moment.duration(hhmmss).asMinutes(),
-                    id: +d.CarID,
+                    id: +d.id,
                     lat: +d.lat,
                     long: +d.long,
                     FirstName: d.FirstName,
                     LastName: d.LastName,
-                    price: d.price,
-                    location: d.location,
-                    Category: d.Category
-                  }
-
+                    CurrentEmploymentType: d.CurrentEmploymentType,
+                    CurrentEmploymentTitle: d.CurrentEmploymentTitle
+                  };
                   return r;
                 });
 
-                d3.csv('car-assignments.csv').then((data) => {
-                  const carAssignments = data.map((d) => {
-                    return {
-                      CarID: +d.CarID,
-                      FirstName: d.FirstName,
-                      LastName: d.LastName,
-                      CurrentEmploymentType: d.CurrentEmploymentType,
-                      CurrentEmploymentTitle: d.CurrentEmploymentTitle
-                    }
-                  })
+                cf = crossfilter(gpsRecord);
+                dID = cf.dimension(d => d.id);
+                dEmplType = cf.dimension(d => d.CurrentEmploymentType);
+                dDate = cf.dimension(d => d.Date);
+                dMinutes = cf.dimension(d => d.Minutes);
 
-                  const ccRecordJoined = preprocessing.join(carAssignments, ccRecord, "CarID", "id", function(cc, car) {
-                    return {
-                      Timestamp: cc.Timestamp,
-                      Date: cc.Date,
-                      Category: cc.Category,
-                      Minutes: cc.Minutes,
-                      CarID: car.CarID,
-                      FirstName: car.FirstName,
-                      LastName: car.LastName,
-                      price: cc.price,
-                      location: cc.location,
-                      CurrentEmploymentType: car.CurrentEmploymentType,
-                      CurrentEmploymentTitle: car.CurrentEmploymentTitle
-                    };
-                  });
+                this.employeesValue = [];
+                this.dates.value = '2014-01-06';
+                this.range = {min:0, max:0};
 
-                  cf2 = crossfilter(ccRecordJoined);
-                  dIDCc = cf2.dimension(d => d.CarID);
-                  dEmplTypeCc = cf2.dimension(d => d.CurrentEmploymentType);
-                  dDateCc = cf2.dimension(d => d.Date);
-                  dMinutesCc = cf2.dimension(d => d.Minutes);
-
-                  //finding unique values for the options
-                  this.employmentType.options = dEmplType.group().reduceCount().all().map(v => v.key);
-
-                  /*
-                  this.dateOptions.enable = dDate.group().reduceCount().all().map(v => v.key);
-                  */
-
-                  const uniqueStrings = new Set(gpsRecord.map(d => { //slice to consider less record?
-                    return {
-                      CarID: d.id,
-                      FirstName: d.FirstName,
-                      LastName: d.LastName,
-                      CurrentEmploymentType: d.CurrentEmploymentType,
-                      CurrentEmploymentTitle: d.CurrentEmploymentTitle,
-                      Color: '#000000' //black is the default color
-                    }
-                  }).map(JSON.stringify));
-                  const uniqueStringsArray = Array.from(uniqueStrings);
-                  this.employees.options = uniqueStringsArray.map(JSON.parse);
-
-                  this.toggleBusy();
-
-                  this.employees.value = [];
-                  this.dates.value = '2014-01-06';
-                  this.range = {min:0, max:0};
-
-                  this.refreshMap(dID, dIDCc);
-                })
+                this.refreshMap(dID, dIDCc);
+                this.toggleBusy();
               });
+
         });
 
   },
   methods: {
     refreshMap(cfDimension1, cfDimension2) {
+      console.log(cfDimension1.top(Infinity), cfDimension2.top(Infinity))
       this.coordinates = {
         points: cfDimension1.top(Infinity),
-        colors: d3.group(this.employees.value, d => d.CarID)
+        colors: d3.group(this.employeesValue, d => d.CarID)
       };
       this.ccRecord = {
         transactions: cfDimension2.top(Infinity),
@@ -305,7 +283,7 @@ export default {
       }
     },
     onRowSelected(items) {
-      this.employees.value = items
+      this.employeesValue = items
     },
     toggleBusy() {
       this.isBusy = !this.isBusy
@@ -317,7 +295,7 @@ export default {
       this.$refs.selectableTable.clearSelected()
     },
     setEmploymentType(type){
-      this.employmentType.value = new Array(type);
+      this.employmentTypeValue = new Array(type);
     },
     updateTable(){
       var table = this.$refs.selectableTable;
@@ -337,10 +315,10 @@ export default {
     }
   },
   watch: {
-    employees: {
+    employeesValue: {
       handler(newVal){
         var selectedIDs = []
-        newVal.value.forEach(d => selectedIDs.push(d.CarID));
+        newVal.forEach(d => selectedIDs.push(d.CarID));
         dEmplType.filter(null); // to allow complex complex condition like "All the Employer of type 'Executive' + CarID 1"
         dID.filter(d => selectedIDs.indexOf(d) > -1);
         dIDCc.filter(d => selectedIDs.indexOf(d) > -1);
@@ -352,7 +330,6 @@ export default {
     },
     dates: {
       handler(newDate){
-        console.log(newDate);
         var selectedDates = [];
 
         newDate.value.split(";").forEach(d => selectedDates.push(d.trim()));
@@ -364,11 +341,11 @@ export default {
       },
       deep: true
     },
-    employmentType: {
+    employmentTypeValue: {
       handler(newVal){
-        if(newVal.value.length != 0) {
+        if(newVal.length != 0) {
           var selectedTypes = []
-          newVal.value.forEach(d => selectedTypes.push(d));
+          newVal.forEach(d => selectedTypes.push(d));
           dEmplType.filter(d => selectedTypes.indexOf(d) > -1);
           dEmplTypeCc.filter(d => selectedTypes.indexOf(d) > -1);
 
