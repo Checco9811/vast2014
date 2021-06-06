@@ -11,6 +11,7 @@ import 'moment';
 
 import { LMap, LTileLayer, LMarker } from 'vue2-leaflet';
 import 'leaflet/dist/leaflet.css';
+
 import { Icon } from 'leaflet';
 
 import "vue-histogram-slider/dist/histogram-slider.css";
@@ -23,7 +24,9 @@ import VSwatches from 'vue-swatches'
 
 
 Vue.use(VSwatches);
-Vue.use(VueBlu)
+Vue.use(VueBlu);
+Vue.use(BootstrapVue);
+Vue.use(IconsPlugin);
 
 Vue.component('l-map', LMap);
 Vue.component('l-tile-layer', LTileLayer);
@@ -35,9 +38,6 @@ Icon.Default.mergeOptions({
   iconUrl: require('leaflet/dist/images/marker-icon.png'),
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
-
-Vue.use(BootstrapVue)
-Vue.use(IconsPlugin)
 
 Vue.config.productionTip = false
 

@@ -78,17 +78,14 @@
 
       <b-row>
         <b-col>
-          <div id='hist'>
-          </div>
+          <HistogramSlider @updateRange="updateRange($event)" :data="histogramData"></HistogramSlider>
         </b-col>
       </b-row>
 
       <b-row>
         <b-col>
           <h5 style="text-align: center">Credit Card Transactions</h5>
-          <div style="height:250px">
-            <Timeline :cf-aggregation="ccRecord"></Timeline>
-          </div>
+          <Timeline :cf-aggregation="ccRecord"></Timeline>
         </b-col>
       </b-row>
 
@@ -101,15 +98,12 @@
 
 import Map from '@/components/Map';
 import Timeline from "@/components/Timeline";
+import HistogramSlider from "@/components/HistogramSlider";
 import VSwatches from 'vue-swatches'
 import crossfilter from 'crossfilter2';
 import moment from 'moment';
-import histogram from "@/assets/js/histogramSlider";
 
 const d3 = require('d3');
-
-// histogram slider
-const histogramSlider = histogram();
 
 // crossfilter data management
 let cf; // crossfilter instance
@@ -129,12 +123,14 @@ export default {
   components: {
     VSwatches,
     Timeline,
+    HistogramSlider,
     Map
   },
   data () {
     return {
       colors: ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928','#000000'],
       coordinates: {},
+      histogramData: [],
       employeesValue: [],
       employeesOptions: [],
       dates: {
@@ -165,13 +161,6 @@ export default {
     };
   },
   mounted(){
-    // init histogram slider
-    d3.select('#hist')
-        .call(histogramSlider);
-
-    histogramSlider.on('range', (range) =>{
-      this.range = {min: range[0], max: range[1]}
-    })
 
     d3.csv('car-assignments.csv').then((data) => {
       const carAssignments = data.map((d) => {
@@ -272,7 +261,6 @@ export default {
   },
   methods: {
     refreshMap(cfDimension1, cfDimension2) {
-      console.log(cfDimension1.top(Infinity), cfDimension2.top(Infinity))
       this.coordinates = {
         points: cfDimension1.top(Infinity),
         colors: d3.group(this.employeesValue, d => d.CarID)
@@ -302,7 +290,7 @@ export default {
 
       var i=0;
       table.items.forEach( d => {
-        if(this.employmentType.value.includes(d.CurrentEmploymentType))
+        if(this.employmentTypeValue.includes(d.CurrentEmploymentType))
           table.selectRow(i);
         else
           table.unselectRow(i);
@@ -311,7 +299,10 @@ export default {
     },
     refreshHistogramSlider(){
       // ignoring the dMinutes dimension for the histogram slider
-      histogramSlider.data(cf.allFiltered([dMinutes]).map(d => d.Minutes));
+      this.histogramData = (cf.allFiltered([dMinutes]).map(d => d.Minutes));
+    },
+    updateRange(event){
+      this.range = event;
     }
   },
   watch: {

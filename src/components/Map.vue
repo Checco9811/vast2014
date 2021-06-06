@@ -46,12 +46,6 @@ export default {
           [[36.02799998329553,24.74258422851562],
             [36.110143066608245,24.9664306640625]]
       ),
-      /*
-      maxBounds: latLngBounds(
-          [[36.03771731908686, 24.793739318847656],
-            [36.09904766316007, 24.91905212402343]]
-      ),
-       */
       mapStyle: {"color": "grey", "opacity": 0.5},
       options: {
         pointToLayer: function (feature, latlng) {
@@ -221,15 +215,6 @@ export default {
               fillOpacity: 0.7
             });
 
-            /*
-          startPoint.on('mouseover', function (e) {
-            L.popup()
-                .setLatLng(e.latlng)
-                .setContent('Start: ' + dd[0].Timestamp.toISOString())
-                .openOn(map);
-          });
-          */
-
             var endPoint = L.circleMarker(dd[dd.length - 1].p, {
               radius: 2,
               fillColor: colorMap.get(d.id)[0].Color,
@@ -238,14 +223,6 @@ export default {
               opacity: 1,
               fillOpacity: 0.7
             });
-
-            /*endPoint.on('mouseover', function (e) {
-            L.popup()
-                .setLatLng(e.latlng)
-                .setContent('End: ' + dd[dd.length - 1].Timestamp.toISOString())
-                .openOn(map);
-          });
-           */
 
             startPoint.addTo(features);
             endPoint.addTo(features);

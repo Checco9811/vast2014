@@ -65,7 +65,6 @@ export default {
   },
   watch: {
     cfAggregation(datum) {
-      console.log(datum);
 
       var group = Array.from(d3.group(datum.transactions, d => d.CarID, d => d.Date));
 
@@ -73,7 +72,6 @@ export default {
         return {
           group: d[0]+"",
           data: Array.from(d[1]).map(dd => {
-            console.log(dd)
             return {
               label: dd[0],
               data: dd[1].map(ddd => {
@@ -89,8 +87,6 @@ export default {
         }
       })
 
-      console.log(result, datum.range)
-
       myChart
           .data(result.length == 0? this.data : result)
           .zoomX(datum.range.min != null && datum.range.max != null ? [datum.range.min, datum.range.max] : [1,1440])
@@ -100,6 +96,7 @@ export default {
                     "<p>" + "Location: " + d.data.location + "</p>";
 
           });
+
     }
   }
 
