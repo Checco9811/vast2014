@@ -22,7 +22,6 @@ import 'vue-blu/dist/css/vue-blu.min.css';
 import 'vue-swatches/dist/vue-swatches.css';
 import VSwatches from 'vue-swatches'
 
-
 Vue.use(VSwatches);
 Vue.use(VueBlu);
 Vue.use(BootstrapVue);

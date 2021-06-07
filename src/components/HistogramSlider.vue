@@ -17,7 +17,16 @@ export default {
       type: Array
     }
   },
+  created() {
+    window.addEventListener("resize", this.pageResize);
+  },
+  destroyed() {
+    window.removeEventListener("resize", this.pageResize);
+  },
   mounted() {
+    const width = d3.select('#hist').node().getBoundingClientRect().width;
+    histogramSlider.width(width);
+
     // init histogram slider
     d3.select('#hist')
         .call(histogramSlider);
@@ -33,6 +42,15 @@ export default {
   watch: {
     data(datum){
       histogramSlider.data(datum);
+    }
+  },
+  methods: {
+    pageResize(){
+      const width = d3.select('#hist').node().getBoundingClientRect().width;
+      //const height = d3.select('#hist').node().getBoundingClientRect().height;
+
+      histogramSlider
+          .resize(width);
     }
   }
 }

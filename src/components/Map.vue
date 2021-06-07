@@ -9,7 +9,7 @@
 </template>
 
 <script>
-const d3 = require('d3');
+const d3 = Object.assign({}, require("d3"), require("d3-array"));
 const preprocessing = require('@/assets/js/preprocessing')
 import L from 'leaflet';
 import { latLngBounds } from "leaflet";
@@ -46,7 +46,10 @@ export default {
           [[36.02799998329553,24.74258422851562],
             [36.110143066608245,24.9664306640625]]
       ),
-      mapStyle: {"color": "grey", "opacity": 0.5},
+      mapStyle: {
+        "color": "grey",
+        "opacity": 0.5
+      },
       options: {
         pointToLayer: function (feature, latlng) {
           return L.circleMarker(latlng, {

@@ -13,7 +13,7 @@
     <b-container fluid="lg">
 
       <b-row>
-        <b-col cols="4">
+        <b-col lg="4">
           <b-row>
             <b-table
                 id="CarIDs"
@@ -71,21 +71,21 @@
 
         </b-col>
 
-        <b-col>
+        <b-col lg="8">
           <Map :coordinates="gpsRecord" :ccRecord="ccRecord"></Map>
         </b-col>
       </b-row>
 
       <b-row>
-        <b-col>
+        <b-col cols="12">
           <HistogramSlider @updateRange="updateRange($event)" :data="histogramData"></HistogramSlider>
         </b-col>
       </b-row>
 
       <b-row>
-        <b-col>
+        <b-col cols="12">
           <h5 style="text-align: center">Credit Card Transactions</h5>
-          <Timeline :cf-aggregation="ccRecord"></Timeline>
+          <Timeline :transactions="ccRecord"></Timeline>
         </b-col>
       </b-row>
 
@@ -316,7 +316,6 @@ export default {
               selectedLastName.push(d.LastName);
             }
         );
-        console.log(selectedIDs);
 
         dEmplType.filter(null); // to allow complex complex condition like "All the Employer of type 'Executive' + CarID 1"
         dID.filter(d => selectedIDs.indexOf(d) > -1);

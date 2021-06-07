@@ -7,7 +7,7 @@ const d3 = require('d3');
 import TimelinesChart from 'timelines-chart';
 
 // timeline component
-const myChart = TimelinesChart();
+const timeline = TimelinesChart();
 
 const formatMinutes = function (d) {
   var hours = Math.floor(d / 60),
@@ -23,8 +23,9 @@ export default {
   name: "Timeline",
   components: {},
   props: {
-    cfAggregation: {
-      type: Object
+    transactions: {
+      type: Object,
+      default: () => {}
     }
   },
   data() {
@@ -50,13 +51,20 @@ export default {
     }
 
   },
+  created() {
+    window.addEventListener("resize", this.pageResize);
+  },
+  destroyed() {
+    window.removeEventListener("resize", this.pageResize);
+  },
   mounted() {
 
     const colorScale = d3.scaleOrdinal(["SpecialGoods", "transportation", "Unknown", "Shop", "Park", "Restaurant", "SpecialMeeting", "Uncertain"],
                               ["#ff7f00", "#e41a1c", "#999999", "#377eb8", "#4daf4a", "#984ea3", "#f781bf", "#ffff33"]);
+    const width = d3.select('#chart').node().getBoundingClientRect().width;
 
-    myChart
-        .width(1000)
+    timeline
+        .width(width)
         .xTickFormat(n => formatMinutes(+n))
         .timeFormat('%Q')
         .data(this.data)
@@ -66,7 +74,7 @@ export default {
 
   },
   watch: {
-    cfAggregation(datum) {
+    transactions(datum) {
 
       var group = Array.from(d3.group(datum.transactions, d => d.LastName, d => d.Date));
 
@@ -89,7 +97,7 @@ export default {
         }
       })
 
-      myChart
+      timeline
           .data(result.length == 0? this.data : result)
           .zoomX(datum.range.min != null && datum.range.max != null ? [datum.range.min, datum.range.max] : [1,1440])
           .segmentTooltipContent(d => {
@@ -99,6 +107,16 @@ export default {
 
           });
 
+    }
+  },
+  methods: {
+    pageResize() {
+      const width = d3.select('#chart').node().getBoundingClientRect().width;
+
+      timeline
+        .width(width)
+        .zoomX(this.transactions.range.min != null && this.transactions.range.max != null ?
+            [this.transactions.range.min, this.transactions.range.max] : [1,1440])
     }
   }
 

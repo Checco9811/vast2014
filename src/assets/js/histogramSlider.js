@@ -2,7 +2,7 @@ const d3 = require('d3');
 
 export default function histogram() {
     var data = [1, 1440] // data for the histogram
-        ,margin = { top: 30, right: 30, bottom: 30, left: 50 }
+        ,margin = { top: 30, right: 0, bottom: 30, left: 0 }
         ,width = 1000
         ,height = 100
         ,fillColor = 'steelblue'
@@ -158,10 +158,15 @@ export default function histogram() {
         return chart;
     };
 
-
     chart.width = function(_) {
         if (!arguments.length) return width;
         width = _;
+        return chart;
+    };
+
+    chart.resize = function(_) {
+        const resize = _/width;
+        svg = svg.attr("transform", "scale("+ (resize) +",1)")
         return chart;
     };
 
