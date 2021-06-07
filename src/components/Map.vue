@@ -114,7 +114,6 @@ export default {
   },
   methods: {
     createTrajectories(coordinates) {
-      console.log(coordinates);
       const result = [];
       var tmp = [];
 
@@ -134,7 +133,6 @@ export default {
       const ccCounts = d3.rollup(locations.transactions, v => v.length, d => d.location.toLocaleLowerCase().replace(/ /g,''));
       const scaleRadius = d3.scaleSqrt([0, d3.max(ccCounts.values())], [5, 20]);
 
-      //var map = this.$refs.map.mapObject;
       var locationsLayer = this.$refs.locations.mapObject;
 
       locationsLayer.eachLayer(function (layer) {
@@ -153,34 +151,28 @@ export default {
       const colorMap = coordinates.colors;
       var map = this.$refs.map.mapObject;
       var features = this.$refs.features.mapObject;
-      var idList = [];
-      var dateList = [];
 
-      const trajs = d3.group(coordinates.points, d => d.id, d => d.Date); // group by id and date
-      const trs = [];
-      Array.from(trajs).map((d) => {
-        idList.push(+d[0]);
-        var id = d[0];
-        Array.from(d[1]).map(d => {
-          dateList.push(d[0]);
-          trs.push({
-            id: id,
-            Date: d[0],
-            trajs: d[1].sort((a, b) => a.Timestamp - b.Timestamp)
-                .map(p => {
-                  return {
-                    p: [p.lat, p.long],
-                    Timestamp: p.Timestamp
-                  }
-                }),
-          })
-        })
-      });
+      const groupIdDate = d3.flatGroup(coordinates.points, d => d.id, d => d.Date);
+      const trajs = groupIdDate.map(d => {
+        return{
+          id: d[0],
+          Date: d[1],
+          trajs : d[2].sort((a, b) => a.Timestamp - b.Timestamp)
+              .map(p => {
+                return {
+                  p: [p.lat, p.long],
+                  Timestamp: p.Timestamp
+                }
+              })
+        }
+      })
+
+      console.log(trajs);
 
       features.clearLayers();
 
       //add to map the new trajectories
-      trs.forEach(d => {
+      trajs.forEach(d => {
         var newTrajs = this.createTrajectories(d.trajs);
 
         console.log(newTrajs);

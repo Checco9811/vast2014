@@ -36,10 +36,12 @@ export default {
             label: " ",
             data: [
               {
-                timeRange: [1, 1]
+                timeRange: [1, 1],
+                val: "Unknown"
               },
               {
-                timeRange: [1440, 1440]
+                timeRange: [1440, 1440],
+                val: "Unknown"
               }
             ]
           }
@@ -66,7 +68,7 @@ export default {
   watch: {
     cfAggregation(datum) {
 
-      var group = Array.from(d3.group(datum.transactions, d => d.CarID, d => d.Date));
+      var group = Array.from(d3.group(datum.transactions, d => d.LastName, d => d.Date));
 
       var result = group.map(d => {
         return {

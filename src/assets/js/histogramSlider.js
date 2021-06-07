@@ -1,8 +1,6 @@
 const d3 = require('d3');
 
 export default function histogram() {
-    const dispatch = d3.dispatch('range');
-
     var data = [1, 1440] // data for the histogram
         ,margin = { top: 30, right: 30, bottom: 30, left: 50 }
         ,width = 1000
@@ -20,6 +18,8 @@ export default function histogram() {
         ,bar
         ,gBrushes
         ,updateData;
+
+    const dispatch = d3.dispatch('range');
 
     const brush = d3.brushX()
         .extent([[0, 0], [width, height]])
@@ -118,9 +118,7 @@ export default function histogram() {
 
                 var bins = histogram(data);
 
-                y.domain([0, d3.max(bins, function (d) {
-                    return d.length;
-                })]);
+                y.domain([0, d3.max(bins, function (d) {return d.length;})]);
 
                 yAxis.transition()
                     .duration(1000)

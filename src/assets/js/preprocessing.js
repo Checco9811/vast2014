@@ -1,3 +1,7 @@
+exports.createTrajectories = () => {
+
+}
+
 exports.join = (lookupTable, mainTable, lookupKey, mainKey, select) => {
     var l = lookupTable.length,
         m = mainTable.length,

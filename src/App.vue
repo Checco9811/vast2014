@@ -72,7 +72,7 @@
         </b-col>
 
         <b-col>
-          <Map :coordinates="coordinates" :ccRecord="ccRecord"></Map>
+          <Map :coordinates="gpsRecord" :ccRecord="ccRecord"></Map>
         </b-col>
       </b-row>
 
@@ -117,6 +117,7 @@ let dIDCc;
 let dEmplTypeCc;
 let dDateCc;
 let dMinutesCc;
+let dLastNameCc;
 
 export default {
   name: 'App',
@@ -129,7 +130,8 @@ export default {
   data () {
     return {
       colors: ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928','#000000'],
-      coordinates: {},
+      gpsRecord: {},
+      ccRecord: {},
       histogramData: [],
       employeesValue: [],
       employeesOptions: [],
@@ -142,7 +144,6 @@ export default {
         },
         value: ''
       },
-      ccRecord: {},
       fields: [
         {key:'CarID', sortable: true},
         {key:'FirstName', sortable: true},
@@ -178,11 +179,11 @@ export default {
 
       const uniqueStrings = new Set(carAssignments.map(d => {
         return {
-          CarID: d.CarID,
-          FirstName: d.FirstName,
-          LastName: d.LastName,
-          CurrentEmploymentType: d.CurrentEmploymentType,
-          CurrentEmploymentTitle: d.CurrentEmploymentTitle,
+          CarID: d.CarID == 0 ? "-" : d.CarID,
+          FirstName: d.FirstName == "" ? "-" : d.FirstName,
+          LastName: d.LastName == "" ? "-" : d.LastName,
+          CurrentEmploymentType: d.CurrentEmploymentType == "" ? "Facilities" : d.CurrentEmploymentType,
+          CurrentEmploymentTitle: d.CurrentEmploymentTitle == "" ? "-" : d.CurrentEmploymentTitle,
           Color: '#000000' //black is the default color
         }
       }).map(JSON.stringify));
@@ -216,10 +217,11 @@ export default {
           });
 
           cf2 = crossfilter(ccRecord);
-          dIDCc = cf2.dimension(d => d.CarID);
+          dIDCc = cf2.dimension(d => d.LastName);
           dEmplTypeCc = cf2.dimension(d => d.CurrentEmploymentType);
           dDateCc = cf2.dimension(d => d.Date);
           dMinutesCc = cf2.dimension(d => d.Minutes);
+          //dLastNameCc = cf2.dimension(d => d.LastName);
 
           d3.csv('gps-joined.csv')
               .then((data) => {
@@ -261,7 +263,7 @@ export default {
   },
   methods: {
     refreshMap(cfDimension1, cfDimension2) {
-      this.coordinates = {
+      this.gpsRecord = {
         points: cfDimension1.top(Infinity),
         colors: d3.group(this.employeesValue, d => d.CarID)
       };
@@ -308,11 +310,17 @@ export default {
   watch: {
     employeesValue: {
       handler(newVal){
-        var selectedIDs = []
-        newVal.forEach(d => selectedIDs.push(d.CarID));
+        var selectedIDs = [], selectedLastName = []
+        newVal.forEach(d => {
+              selectedIDs.push(d.CarID);
+              selectedLastName.push(d.LastName);
+            }
+        );
+        console.log(selectedIDs);
+
         dEmplType.filter(null); // to allow complex complex condition like "All the Employer of type 'Executive' + CarID 1"
         dID.filter(d => selectedIDs.indexOf(d) > -1);
-        dIDCc.filter(d => selectedIDs.indexOf(d) > -1);
+        dIDCc.filter(d => selectedLastName.indexOf(d) > -1);
 
         this.refreshMap(dID, dIDCc);
         this.refreshHistogramSlider();
