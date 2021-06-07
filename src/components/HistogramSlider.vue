@@ -25,7 +25,7 @@ export default {
   },
   mounted() {
     const width = d3.select('#hist').node().getBoundingClientRect().width;
-    histogramSlider.width(width);
+    histogramSlider.width(width-60);
 
     // init histogram slider
     d3.select('#hist')
@@ -50,7 +50,7 @@ export default {
       //const height = d3.select('#hist').node().getBoundingClientRect().height;
 
       histogramSlider
-          .resize(width);
+          .resize(width-60);
     }
   }
 }

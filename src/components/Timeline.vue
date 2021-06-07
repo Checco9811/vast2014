@@ -3,7 +3,7 @@
 </template>
 
 <script>
-const d3 = require('d3');
+const d3 = Object.assign({}, require("d3"), require("d3-array"));
 import TimelinesChart from 'timelines-chart';
 
 // timeline component
@@ -75,12 +75,11 @@ export default {
   },
   watch: {
     transactions(datum) {
-
       var group = Array.from(d3.group(datum.transactions, d => d.LastName, d => d.Date));
 
       var result = group.map(d => {
         return {
-          group: d[0]+"",
+          group: d[0],
           data: Array.from(d[1]).map(dd => {
             return {
               label: dd[0],

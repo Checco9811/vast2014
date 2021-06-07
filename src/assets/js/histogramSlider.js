@@ -2,7 +2,7 @@ const d3 = require('d3');
 
 export default function histogram() {
     var data = [1, 1440] // data for the histogram
-        ,margin = { top: 30, right: 0, bottom: 30, left: 0 }
+        ,margin = { top: 30, right: 30, bottom: 30, left: 40 }
         ,width = 1000
         ,height = 100
         ,fillColor = 'steelblue'
@@ -21,9 +21,7 @@ export default function histogram() {
 
     const dispatch = d3.dispatch('range');
 
-    const brush = d3.brushX()
-        .extent([[0, 0], [width, height]])
-        .on("end", brushed);
+    const brush = d3.brushX();
 
     const formatMinutes = function(d) {
         var hours = Math.floor(d / 60),
@@ -56,6 +54,10 @@ export default function histogram() {
     function chart(selection){
 
         selection.each(function() {
+            brush
+                .extent([[0, 0], [width, height]])
+                .on("end", brushed);
+
             svg = d3
                 .select(this)
                 .append("svg")
@@ -166,7 +168,10 @@ export default function histogram() {
 
     chart.resize = function(_) {
         const resize = _/width;
-        svg = svg.attr("transform", "scale("+ (resize) +",1)")
+        svg = svg
+            .attr("transform", "scale("+ (resize) +",1)")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
         return chart;
     };
 
