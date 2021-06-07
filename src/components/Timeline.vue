@@ -97,7 +97,7 @@ export default {
       })
 
       timeline
-          .data(result.length == 0? this.data : result)
+          .data(result.length == 0 ? this.data : result)
           .zoomX(datum.range.min != null && datum.range.max != null ? [datum.range.min, datum.range.max] : [1,1440])
           .segmentTooltipContent(d => {
             return "<p>" +  "Ora: " + formatMinutes(d.data.timeRange[0]) + "</p></br>" +

@@ -7,7 +7,7 @@
 import histogram from "@/assets/js/histogramSlider";
 const d3 = require('d3');
 
-// histogram slider
+// histogram slider component
 const histogramSlider = histogram();
 
 export default {

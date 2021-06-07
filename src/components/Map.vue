@@ -1,8 +1,8 @@
 <template>
   <l-map ref="map" style="height: 500px; weight: 100%;" :zoom="zoom" :center="center" :maxBounds="maxBounds">
     <l-tile-layer :url="url"></l-tile-layer>
-    <l-geo-json :geojson="geoJson" :optionsStyle="mapStyle"></l-geo-json>
-    <l-geo-json ref="locations" :geojson="locations" :options="options"></l-geo-json>
+    <l-geo-json :geojson="geoJsonMap" :options="mapStyle"></l-geo-json>
+    <l-geo-json ref="locations" :geojson="geoJsonLocations" :options="locationsStyle"></l-geo-json>
     <l-layer-group ref="features"></l-layer-group>
     <l-layer-group ref="ccRecords"></l-layer-group>
   </l-map>
@@ -24,13 +24,13 @@ export default {
     LLayerGroup,
   },
   props:{
-    coordinates:{
+    gpsRecord:{
       type: Object,
       default:() => ({})
     },
     ccRecord:{
-      type: Object,
-      default:() => ({})
+      type: Array,
+      default:() => ([])
     }
   },
   data () {
@@ -47,10 +47,10 @@ export default {
             [36.110143066608245,24.9664306640625]]
       ),
       mapStyle: {
-        "color": "grey",
-        "opacity": 0.5
+        color: "grey",
+        opacity: 0.5
       },
-      options: {
+      locationsStyle: {
         pointToLayer: function (feature, latlng) {
           return L.circleMarker(latlng, {
             radius: 5,
@@ -66,21 +66,21 @@ export default {
                       , {closeOnClick: false, autoClose: false});
         }
       },
-      geoJson: null,
-      locations: null,
+      geoJsonMap: null,
+      geoJsonLocations: null,
     }
   },
   mounted(){
-    var map = this.$refs.map.mapObject;
+    const map = this.$refs.map.mapObject;
     //Loading map
     d3.json('Abila.geojson')
         .then((data) => {
-          this.geoJson = data;
+          this.geoJsonMap = data;
 
           //Loading locations
           d3.json('location.geojson')
               .then((data) => {
-                this.locations = data;
+                this.geoJsonLocations = data;
               });
 
           L.control.legend({
@@ -104,45 +104,37 @@ export default {
 
   },
   watch: {
-    coordinates: {
-      handler(newCoordinates) {
-        this.refreshMap(newCoordinates);
+    gpsRecord: {
+      handler(newGpsRecord) {
+        this.refreshMap(newGpsRecord);
       }
     },
     ccRecord: {
-      handler(newCcRecords) {
-        this.refreshLocations(newCcRecords);
+      handler(newCcRecordCount) {
+        this.refreshLocations(newCcRecordCount);
       }
     },
   },
   methods: {
-    createTrajectories(coordinates) {
-      const result = [];
-      var tmp = [];
-
-      for (var i = 0; i < coordinates.length - 1; i++) {
-        tmp.push(coordinates[i]);
-        if (coordinates[i + 1].Timestamp - coordinates[i].Timestamp > 600000) {
-          result.push(tmp);
-          tmp = [];
+    refreshLocations(ccCounts) {
+      const locationsLayer = this.$refs.locations.mapObject;
+      ccCounts = ccCounts.map(d => {
+        return{
+          key: d.key.toLocaleLowerCase().replace(/ /g,''),
+          value: d.value
         }
-      }
+      })
+      const scaleRadius = d3.scaleSqrt([0, d3.max(ccCounts.map(d => d.value))], [5, 20]);
 
-      result.push(tmp);
-
-      return result;
-    },
-    refreshLocations(locations) {
-      const ccCounts = d3.rollup(locations.transactions, v => v.length, d => d.location.toLocaleLowerCase().replace(/ /g,''));
-      const scaleRadius = d3.scaleSqrt([0, d3.max(ccCounts.values())], [5, 20]);
-
-      var locationsLayer = this.$refs.locations.mapObject;
-
+      //for each location point in the map, update the corresponding transactions count
       locationsLayer.eachLayer(function (layer) {
-        var value = ccCounts.get(layer.feature.properties.name.toLocaleLowerCase().replace(/ /g,''));
+        const el = ccCounts.find(d => d.key === layer.feature.properties.name.toLocaleLowerCase().replace(/ /g,''));
+        var value;
 
-        if (value == null)
+        if (el == null)
           value = 0;
+        else
+          value = el["value"]
 
         layer.setRadius(value != 0 ? scaleRadius(value) : 5);
         layer.setPopupContent('<b>' + 'Location' + '</b>' + ': ' + layer.feature.properties.name + '<br/>' +
@@ -150,14 +142,14 @@ export default {
       });
 
     },
-    refreshMap(coordinates) {
-      const colorMap = coordinates.colors;
-      var map = this.$refs.map.mapObject;
-      var features = this.$refs.features.mapObject;
+    refreshMap(gpsRecord) {
+      const colorMap = gpsRecord.colors;
+      const map = this.$refs.map.mapObject;
+      const features = this.$refs.features.mapObject;
 
-      const groupIdDate = d3.flatGroup(coordinates.points, d => d.id, d => d.Date);
+      const groupIdDate = d3.flatGroup(gpsRecord.points, d => d.id, d => d.Date); // group gps record by id and date
       const trajs = groupIdDate.map(d => {
-        return{
+        return {
           id: d[0],
           Date: d[1],
           trajs : d[2].sort((a, b) => a.Timestamp - b.Timestamp)
@@ -170,15 +162,12 @@ export default {
         }
       })
 
-      console.log(trajs);
-
+      //remove old trajectories
       features.clearLayers();
 
       //add to map the new trajectories
       trajs.forEach(d => {
-        var newTrajs = this.createTrajectories(d.trajs);
-
-        console.log(newTrajs);
+        var newTrajs = preprocessing.splitTrajectories(d.trajs, 600000);
 
         newTrajs.forEach(dd => {
           if (dd.length != 0) { // draw only array with more than 1 coordinates
@@ -234,26 +223,5 @@ export default {
 </script>
 
 <style scoped>
-
-/*another-popop style*/
-.popupStyle .leaflet-popup-content-wrapper {
-  background: #2ce897;
-  color: #eee;
-  font-size: 12px;
-  line-height: 24px;
-  border-radius: 0px;
-}
-.popupStyle .leaflet-popup-content-wrapper a {
-  color: rgba(200, 200, 200, 0.1);
-}
-.popupStyle .leaflet-popup-tip-container {
-  width: 50px;
-  height: 15px;
-}
-.popupStyle .leaflet-popup-tip {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-}
 
 </style>

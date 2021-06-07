@@ -72,7 +72,7 @@
         </b-col>
 
         <b-col lg="8">
-          <Map :coordinates="gpsRecord" :ccRecord="ccRecord"></Map>
+          <Map :gps-record="gpsRecord" :ccRecord="ccRecordCount"></Map>
         </b-col>
       </b-row>
 
@@ -117,6 +117,7 @@ let dEmplTypeCc;
 let dDateCc;
 let dMinutesCc;
 let dLastNameCc;
+let dLocationCc;
 
 export default {
   name: 'App',
@@ -131,6 +132,7 @@ export default {
       colors: ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928','#000000'],
       gpsRecord: {},
       ccRecord: {},
+      ccRecordCount: [],
       histogramData: [],
       employeesValue: [],
       employeesOptions: [],
@@ -149,7 +151,7 @@ export default {
         {key:'LastName', sortable: true},
         {key:'CurrentEmploymentType', sortable: true},
         {key:'CurrentEmploymentTitle', sortable: true},
-        {key: 'Color'}
+        {key: 'Color', sortable: true}
       ],
       isBusy: true,
       range: {
@@ -165,11 +167,11 @@ export default {
     d3.csv('car-assignments.csv').then((data) => {
       const carAssignments = data.map((d) => {
         return {
-          CarID: +d.CarID,
-          FirstName: d.FirstName,
-          LastName: d.LastName,
-          CurrentEmploymentType: d.CurrentEmploymentType,
-          CurrentEmploymentTitle: d.CurrentEmploymentTitle
+          CarID: +d.CarID == 0 ? "-" : +d.CarID,
+          FirstName: d.FirstName == "" ? "-" : d.FirstName,
+          LastName: d.LastName == "" ? "-" : d.LastName,
+          CurrentEmploymentType: d.CurrentEmploymentType == "" ? "Facilities" : d.CurrentEmploymentType,
+          CurrentEmploymentTitle: d.CurrentEmploymentTitle == "" ? "-" : d.CurrentEmploymentTitle,
         }
       })
 
@@ -178,11 +180,11 @@ export default {
 
       const uniqueStrings = new Set(carAssignments.map(d => {
         return {
-          CarID: d.CarID == 0 ? "-" : d.CarID,
-          FirstName: d.FirstName == "" ? "-" : d.FirstName,
-          LastName: d.LastName == "" ? "-" : d.LastName,
-          CurrentEmploymentType: d.CurrentEmploymentType == "" ? "Facilities" : d.CurrentEmploymentType,
-          CurrentEmploymentTitle: d.CurrentEmploymentTitle == "" ? "-" : d.CurrentEmploymentTitle,
+          CarID: d.CarID,
+          FirstName: d.FirstName,
+          LastName: d.LastName,
+          CurrentEmploymentType: d.CurrentEmploymentType,
+          CurrentEmploymentTitle: d.CurrentEmploymentTitle,
           Color: '#000000' //black is the default color
         }
       }).map(JSON.stringify));
@@ -220,7 +222,7 @@ export default {
           dEmplTypeCc = cf2.dimension(d => d.CurrentEmploymentType);
           dDateCc = cf2.dimension(d => d.Date);
           dMinutesCc = cf2.dimension(d => d.Minutes);
-          //dLastNameCc = cf2.dimension(d => d.LastName);
+          dLocationCc = cf2.dimension(d => d.location);
 
           d3.csv('gps-joined.csv')
               .then((data) => {
@@ -253,7 +255,9 @@ export default {
                 this.dates.value = '2014-01-06';
                 this.range = {min:0, max:0};
 
-                this.refreshMap(dID, dLastNameCc);
+                this.refreshMap(dID);
+                this.refreshTimeline(dLastNameCc);
+                this.refreshLocations(dLastNameCc);
                 this.toggleBusy();
               });
 
@@ -261,15 +265,24 @@ export default {
 
   },
   methods: {
-    refreshMap(cfDimension1, cfDimension2) {
+    refreshMap(cfDimension) {
       this.gpsRecord = {
-        points: cfDimension1.top(Infinity),
+        points: cfDimension.top(Infinity),
         colors: d3.group(this.employeesValue, d => d.CarID)
       };
+    },
+    refreshHistogramSlider(){
+      // ignoring the dMinutes dimension for the histogram slider data
+      this.histogramData = (cf.allFiltered([dMinutes]).map(d => d.Minutes));
+    },
+    refreshTimeline(cfDimension){
       this.ccRecord = {
-        transactions: cfDimension2.top(Infinity),
+        transactions: cfDimension.top(Infinity),
         range: this.range
-      }
+      };
+    },
+    refreshLocations(){
+      this.ccRecordCount = dLocationCc.group().reduceCount().all();
     },
     onRowSelected(items) {
       this.employeesValue = items
@@ -283,9 +296,6 @@ export default {
     clearSelected() {
       this.$refs.selectableTable.clearSelected()
     },
-    setEmploymentType(type){
-      this.employmentTypeValue = new Array(type);
-    },
     updateTable(){
       var table = this.$refs.selectableTable;
 
@@ -297,10 +307,6 @@ export default {
           table.unselectRow(i);
         i++;
       })
-    },
-    refreshHistogramSlider(){
-      // ignoring the dMinutes dimension for the histogram slider
-      this.histogramData = (cf.allFiltered([dMinutes]).map(d => d.Minutes));
     },
     updateRange(event){
       this.range = event;
@@ -317,10 +323,13 @@ export default {
         );
 
         dEmplType.filter(null); // to allow complex complex condition like "All the Employer of type 'Executive' + CarID 1"
+        dEmplTypeCc.filter(null);
         dID.filter(d => selectedIDs.indexOf(d) > -1);
         dLastNameCc.filter(d => selectedLastName.indexOf(d) > -1);
 
-        this.refreshMap(dID, dLastNameCc);
+        this.refreshMap(dID);
+        this.refreshTimeline(dLastNameCc);
+        this.refreshLocations();
         this.refreshHistogramSlider();
       },
       deep:true // force watching within properties
@@ -333,24 +342,24 @@ export default {
         dDate.filter(d => selectedDates.indexOf(d) > -1);
         dDateCc.filter(d => selectedDates.indexOf(d) > -1);
 
-        this.refreshMap(dDate, dDateCc);
+        this.refreshMap(dDate);
+        this.refreshTimeline(dDateCc);
+        this.refreshLocations();
         this.refreshHistogramSlider();
       },
       deep: true
     },
     employmentTypeValue: {
       handler(newVal){
-        if(newVal.length != 0) {
-          var selectedTypes = []
-          newVal.forEach(d => selectedTypes.push(d));
-          dEmplType.filter(d => selectedTypes.indexOf(d) > -1);
-          dEmplTypeCc.filter(d => selectedTypes.indexOf(d) > -1);
+        var selectedTypes = []
+        newVal.forEach(d => selectedTypes.push(d));
+        dEmplType.filter(d => selectedTypes.indexOf(d) > -1);
+        dEmplTypeCc.filter(d => selectedTypes.indexOf(d) > -1);
 
-          this.refreshMap(dEmplType, dEmplTypeCc);
-          this.refreshHistogramSlider();
-        }else{
-          dEmplType.filter(null);
-        }
+        this.refreshMap(dEmplType);
+        this.refreshTimeline(dEmplTypeCc);
+        this.refreshLocations();
+        this.refreshHistogramSlider();
 
         this.updateTable(); // Select the CarIDs in the table according to the EmploymentTypes
       },
@@ -366,7 +375,9 @@ export default {
           return d >= newRange.min && d <= newRange.max;
         });
 
-        this.refreshMap(dMinutes, dMinutesCc);
+        this.refreshMap(dMinutes);
+        this.refreshTimeline(dMinutesCc);
+        this.refreshLocations();
       }
     }
 
@@ -387,7 +398,7 @@ export default {
 }
 
 #CarIDs{
-  font-size: 8px;
+  font-size: 10px;
 }
 
 b-table{
