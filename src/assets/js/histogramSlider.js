@@ -4,7 +4,7 @@ export default function histogram() {
     var data = [1, 1440] // data for the histogram
         ,margin = { top: 30, right: 30, bottom: 30, left: 40 }
         ,width = 1000
-        ,height = 100
+        ,height = 200
         ,fillColor = 'steelblue'
         ,xAxis
         ,yAxis
@@ -54,34 +54,37 @@ export default function histogram() {
     function chart(selection){
 
         selection.each(function() {
+
             brush
-                .extent([[0, 0], [width, height]])
+                .extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom ]])
                 .on("end", brushed);
 
             svg = d3
                 .select(this)
                 .append("svg")
-                .attr("width", width + margin.left + margin.right)
-                .attr("height", height + margin.top + margin.bottom)
-                .append("g")
-                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                //.attr("width", width + margin.left + margin.right)
+                //.attr("height", height + margin.top + margin.bottom)
+                .attr("viewBox", [0, 0, width, height])
+                //.append("g")
+                //.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
             x = d3.scaleLinear()
                 .domain(domain)
-                .range([0, width]);
+                .range([margin.left, width - margin.right]);
 
             xAxis = d3.axisBottom(x)
                 .tickFormat(formatMinutes)
                 .tickValues(d3.range(0, d3.max(data), 60));
 
             svg.append("g")
-                .attr("transform", "translate(0," + height + ")")
+                .attr("transform", `translate(0,${height - margin.bottom})`)
                 .call(xAxis);
 
             y = d3.scaleLinear()
-                .range([height, 0]);
+                .range([height - margin.bottom, margin.top]);
 
-            yAxis = svg.append("g");
+            yAxis = svg.append("g")
+                .attr("transform", `translate(${margin.left},0)`);
 
             var histogram = d3
                 .histogram()
@@ -102,7 +105,7 @@ export default function histogram() {
                     return x(d.x1) - x(d.x0) - 1;
                 })
                 .attr("height", function(d) {
-                    return height - y(d.length);
+                    return height - margin.bottom - y(d.length);
                 })
                 .style("fill", fillColor);
 
@@ -143,7 +146,7 @@ export default function histogram() {
                         return x(d.x1) - x(d.x0) - 1;
                     })
                     .attr("height", function (d) {
-                        return height - y(d.length);
+                        return height - margin.bottom - y(d.length);
                     })
                     .style("fill", fillColor);
 
@@ -167,10 +170,10 @@ export default function histogram() {
     };
 
     chart.resize = function(_) {
-        const resize = _/width;
+        const resize = _/(width);
         svg = svg
             .attr("transform", "scale("+ (resize) +",1)")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+            //.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         return chart;
     };

@@ -113,7 +113,6 @@ let dDate; // dimension for Date
 let dMinutes; // dimension for Minutes passed from 00:00
 
 let cf2;
-let dIDCc;
 let dEmplTypeCc;
 let dDateCc;
 let dMinutesCc;
@@ -217,7 +216,7 @@ export default {
           });
 
           cf2 = crossfilter(ccRecord);
-          dIDCc = cf2.dimension(d => d.LastName);
+          dLastNameCc = cf2.dimension(d => d.LastName);
           dEmplTypeCc = cf2.dimension(d => d.CurrentEmploymentType);
           dDateCc = cf2.dimension(d => d.Date);
           dMinutesCc = cf2.dimension(d => d.Minutes);
@@ -254,7 +253,7 @@ export default {
                 this.dates.value = '2014-01-06';
                 this.range = {min:0, max:0};
 
-                this.refreshMap(dID, dIDCc);
+                this.refreshMap(dID, dLastNameCc);
                 this.toggleBusy();
               });
 
@@ -319,9 +318,9 @@ export default {
 
         dEmplType.filter(null); // to allow complex complex condition like "All the Employer of type 'Executive' + CarID 1"
         dID.filter(d => selectedIDs.indexOf(d) > -1);
-        dIDCc.filter(d => selectedLastName.indexOf(d) > -1);
+        dLastNameCc.filter(d => selectedLastName.indexOf(d) > -1);
 
-        this.refreshMap(dID, dIDCc);
+        this.refreshMap(dID, dLastNameCc);
         this.refreshHistogramSlider();
       },
       deep:true // force watching within properties
