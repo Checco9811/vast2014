@@ -4,20 +4,11 @@
 
 <script>
 const d3 = Object.assign({}, require("d3"), require("d3-array"));
+const preprocessing = require('@/assets/js/preprocessing')
 import TimelinesChart from 'timelines-chart';
 
 // timeline component
 const timeline = TimelinesChart();
-
-const formatMinutes = function (d) {
-  var hours = Math.floor(d / 60),
-      minutes = Math.floor(d - hours * 60);
-
-  if (hours <= 12)
-    return hours + ":" + minutes + ' AM';
-  else
-    return hours - 12 + ":" + minutes + ' PM';
-};
 
 export default {
   name: "Timeline",
@@ -65,7 +56,7 @@ export default {
 
     timeline
         .width(width)
-        .xTickFormat(n => formatMinutes(+n))
+        .xTickFormat(n => preprocessing.formatMinutes(+n))
         .timeFormat('%Q')
         .data(this.data)
         .zoomX([1, 1440])
@@ -100,7 +91,7 @@ export default {
           .data(result.length == 0 ? this.data : result)
           .zoomX(datum.range.min != null && datum.range.max != null ? [datum.range.min, datum.range.max] : [1,1440])
           .segmentTooltipContent(d => {
-            return "<p>" +  "Ora: " + formatMinutes(d.data.timeRange[0]) + "</p></br>" +
+            return "<p>" +  "Ora: " + preprocessing.formatMinutes(d.data.timeRange[0]) + "</p></br>" +
                     "<p>" + "Price: " + d.data.price + "</p></br>" +
                     "<p>" + "Location: " + d.data.location + "</p>";
 

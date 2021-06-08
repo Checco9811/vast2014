@@ -15,6 +15,17 @@ exports.splitTrajectories = (data, threshold= 600000) => {
     return result;
 }
 
+exports.formatMinutes = (d) => {
+    const hours = Math.floor(d / 60),
+        minutes = Math.floor(d - hours * 60);
+
+    if (hours <= 12)
+        return hours + ":" + minutes + ' AM';
+    else
+        return hours - 12 + ":" + minutes + ' PM';
+}
+
+
 exports.join = (lookupTable, mainTable, lookupKey, mainKey, select) => {
     var l = lookupTable.length,
         m = mainTable.length,
@@ -33,7 +44,7 @@ exports.join = (lookupTable, mainTable, lookupKey, mainKey, select) => {
 }
 
 exports.formatDate = (date) => {
-    var dateString = date.toISOString().split("T");
+    const dateString = date.toISOString().split("T");
     const d1 = dateString[0];
     const d2 = dateString[1].split(".")[0];
     return d1 + ' ' + d2;

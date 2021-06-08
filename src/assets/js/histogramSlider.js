@@ -1,21 +1,18 @@
 const d3 = require('d3');
 
 export default function histogram() {
-    var data = [1, 1440] // data for the histogram
-        ,margin = { top: 30, right: 30, bottom: 30, left: 40 }
+    var data = new Array() // data for the histogram, initially empty
+        ,margin = { top: 30, right: 30, bottom: 30, left: 50 }
         ,width = 1000
         ,height = 200
         ,fillColor = 'steelblue'
         ,xAxis
         ,yAxis
-        ,min = d3.min(data)
-        ,max = d3.max(data)
-        ,domain = [min,max]
         ,x
         ,y
         ,Nbin = 24 // The number of bins
         ,svg
-        ,bar
+        ,bars
         ,gBrushes
         ,updateData;
 
@@ -62,37 +59,37 @@ export default function histogram() {
             svg = d3
                 .select(this)
                 .append("svg")
-                //.attr("width", width + margin.left + margin.right)
-                //.attr("height", height + margin.top + margin.bottom)
                 .attr("viewBox", [0, 0, width, height])
-                //.append("g")
-                //.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
             x = d3.scaleLinear()
-                .domain(domain)
+                .domain([1, 1440])
                 .range([margin.left, width - margin.right]);
 
             xAxis = d3.axisBottom(x)
                 .tickFormat(formatMinutes)
-                .tickValues(d3.range(0, d3.max(data), 60));
+                .tickValues(d3.range(0, 1440, 60));
 
             svg.append("g")
                 .attr("transform", `translate(0,${height - margin.bottom})`)
                 .call(xAxis);
 
+            const histogram = d3
+                .histogram()
+                .domain(x.domain())
+                .thresholds(x.ticks(Nbin));
+
+            const bins = histogram(data);
+
             y = d3.scaleLinear()
+                .domain([0, Math.max(1, d3.max(bins, function (d) {
+                    return d.length;
+                }))])
                 .range([height - margin.bottom, margin.top]);
 
             yAxis = svg.append("g")
                 .attr("transform", `translate(${margin.left},0)`);
 
-            var histogram = d3
-                .histogram()
-                .domain(x.domain())
-                .thresholds(x.ticks(Nbin));
-            var bins = histogram(data);
-
-            bar = svg.selectAll(".bar")
+            bars = svg.selectAll(".bar")
                 .data(bins)
                 .enter()
                 .append("rect")
@@ -116,25 +113,27 @@ export default function histogram() {
 
             updateData = function () {
 
-                var histogram = d3
+                const histogram = d3
                     .histogram()
                     .domain(x.domain())
                     .thresholds(x.ticks(Nbin));
 
-                var bins = histogram(data);
+                const bins = histogram(data);
 
-                y.domain([0, d3.max(bins, function (d) {return d.length;})]);
+                y.domain([0, Math.max(1, d3.max(bins, function (d) {
+                    return d.length;
+                    }))]);
 
                 yAxis.transition()
                     .duration(1000)
                     .call(d3.axisLeft(y));
 
-                bar.data(bins);
+                bars.data(bins);
 
-                bar
+                bars
                     .enter()
                     .append("rect")
-                    .merge(bar)
+                    .merge(bars)
                     .transition()
                     .duration(1000)
                     .attr("class", "bar")
@@ -150,7 +149,7 @@ export default function histogram() {
                     })
                     .style("fill", fillColor);
 
-                bar.exit().remove();
+                bars.exit().remove();
             }
 
         });
@@ -166,15 +165,6 @@ export default function histogram() {
     chart.width = function(_) {
         if (!arguments.length) return width;
         width = _;
-        return chart;
-    };
-
-    chart.resize = function(_) {
-        const resize = _/(width);
-        svg = svg
-            .attr("transform", "scale("+ (resize) +",1)")
-            //.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
         return chart;
     };
 
